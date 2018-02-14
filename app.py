@@ -28,7 +28,6 @@ app.add_url_rule('/users/<user_id>/activities', view_func=activities.create_acti
 app.add_url_rule('/users/<user_id>/activities/<activity_id>', view_func=activities.update_activity, methods=["PUT"])
 
 
-
 @app.errorhandler(APIError)
 def handle_api_error(error):
     response = jsonify(error.to_dict())
