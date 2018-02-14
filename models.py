@@ -1,65 +1,64 @@
 # coding: utf-8
-from sqlalchemy import Column, DateTime, Float, ForeignKey, String, text
+from sqlalchemy import Column, DateTime, Float, ForeignKey, String
+from sqlalchemy.schema import FetchedValue
 from sqlalchemy.orm import relationship
-from sqlalchemy.dialects.mysql.enumerated import ENUM
-from sqlalchemy.ext.declarative import declarative_base
+from flask_sqlalchemy import SQLAlchemy
 
 
-Base = declarative_base()
-metadata = Base.metadata
+db = SQLAlchemy()
 
 
-class Activity(Base):
+class Activity(db.Model):
     __tablename__ = 'activities'
 
-    id = Column(String(36), primary_key=True)
-    activity_type = Column(String(255), nullable=False, server_default=text("''"))
-    user_id = Column(ForeignKey(u'users.id', ondelete=u'CASCADE', onupdate=u'CASCADE'), nullable=False, index=True)
-    started_at = Column(DateTime, nullable=False, server_default=text("CURRENT_TIMESTAMP"))
-    stopped_at = Column(DateTime)
-    updated_at = Column(DateTime, nullable=False, server_default=text("CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"))
+    id = db.Column(db.String(36), primary_key=True)
+    activity_type = db.Column(db.String(255), nullable=False, server_default=db.FetchedValue())
+    user_id = db.Column(db.ForeignKey(u'users.id', ondelete=u'CASCADE', onupdate=u'CASCADE'), nullable=False, index=True)
+    started_at = db.Column(db.DateTime, nullable=False, server_default=db.FetchedValue())
+    stopped_at = db.Column(db.DateTime)
+    updated_at = db.Column(db.DateTime, nullable=False, server_default=db.FetchedValue())
 
-    user = relationship(u'User')
+    user = db.relationship(u'User', primaryjoin='Activity.user_id == User.id', backref=u'activities')
 
 
-class File(Base):
+class File(db.Model):
     __tablename__ = 'files'
 
-    id = Column(String(36), primary_key=True)
-    file_name = Column(String(255), nullable=False)
-    file_size_mb = Column(Float(asdecimal=True), nullable=False)
-    status = Column(String(255), nullable=False)
-    activity_id = Column(ForeignKey(u'activities.id', ondelete=u'CASCADE', onupdate=u'CASCADE'), nullable=False, index=True)
-    created_at = Column(DateTime, nullable=False, server_default=text("CURRENT_TIMESTAMP"))
-    updated_at = Column(DateTime, nullable=False, server_default=text("CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"))
+    id = db.Column(db.String(36), primary_key=True)
+    file_name = db.Column(db.String(255), nullable=False)
+    file_size_mb = db.Column(db.Float(asdecimal=True), nullable=False)
+    status = db.Column(db.String(255), nullable=False)
+    activity_id = db.Column(db.ForeignKey(u'activities.id', ondelete=u'CASCADE', onupdate=u'CASCADE'), nullable=False, index=True)
+    created_at = db.Column(db.DateTime, nullable=False, server_default=db.FetchedValue())
+    updated_at = db.Column(db.DateTime, nullable=False, server_default=db.FetchedValue())
 
-    activity = relationship(u'Activity')
+    activity = db.relationship(u'Activity', primaryjoin='File.activity_id == Activity.id', backref=u'files')
 
 
-class Jump(Base):
+class Jump(db.Model):
     __tablename__ = 'jumps'
 
-    id = Column(String(36), primary_key=True)
-    activity_id = Column(ForeignKey(u'activities.id', ondelete=u'CASCADE', onupdate=u'CASCADE'), nullable=False, index=True)
-    user_id = Column(ForeignKey(u'users.id', ondelete=u'CASCADE', onupdate=u'CASCADE'), nullable=False, index=True)
-    jump_time = Column(DateTime, nullable=False)
-    abduction_angle = Column(Float(asdecimal=True), nullable=False)
-    adduction_angle = Column(Float(asdecimal=True), nullable=False)
-    flexion_angle = Column(Float(asdecimal=True), nullable=False)
-    created_at = Column(DateTime, nullable=False, server_default=text("CURRENT_TIMESTAMP"))
-    updated_at = Column(DateTime, nullable=False, server_default=text("CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"))
+    id = db.Column(db.String(36), primary_key=True)
+    activity_id = db.Column(db.ForeignKey(u'activities.id', ondelete=u'CASCADE', onupdate=u'CASCADE'), nullable=False, index=True)
+    user_id = db.Column(db.ForeignKey(u'users.id', ondelete=u'CASCADE', onupdate=u'CASCADE'), nullable=False, index=True)
+    jump_time = db.Column(db.DateTime, nullable=False)
+    abduction_angle = db.Column(db.Float(asdecimal=True), nullable=False)
+    adduction_angle = db.Column(db.Float(asdecimal=True), nullable=False)
+    flexion_angle = db.Column(db.Float(asdecimal=True), nullable=False)
+    created_at = db.Column(db.DateTime, nullable=False, server_default=db.FetchedValue())
+    updated_at = db.Column(db.DateTime, nullable=False, server_default=db.FetchedValue())
 
-    activity = relationship(u'Activity')
-    user = relationship(u'User')
+    activity = db.relationship(u'Activity', primaryjoin='Jump.activity_id == Activity.id', backref=u'jumps')
+    user = db.relationship(u'User', primaryjoin='Jump.user_id == User.id', backref=u'jumps')
 
 
-class User(Base):
+class User(db.Model):
     __tablename__ = 'users'
 
-    id = Column(String(36), primary_key=True)
-    first_name = Column(String(255), nullable=False, server_default=text("''"))
-    last_name = Column(String(255), nullable=False, server_default=text("''"))
-    email = Column(String(255), nullable=False, unique=True, server_default=text("''"))
-    gender = Column(ENUM(u'M', u'F'))
-    created_at = Column(DateTime, nullable=False, server_default=text("CURRENT_TIMESTAMP"))
-    updated_at = Column(DateTime, nullable=False, server_default=text("CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"))
+    id = db.Column(db.String(36), primary_key=True)
+    first_name = db.Column(db.String(255), nullable=False, server_default=db.FetchedValue())
+    last_name = db.Column(db.String(255), nullable=False, server_default=db.FetchedValue())
+    email = db.Column(db.String(255), nullable=False, unique=True, server_default=db.FetchedValue())
+    gender = db.Column(db.String(2), nullable=False, server_default=db.FetchedValue())
+    created_at = db.Column(db.DateTime, nullable=False, server_default=db.FetchedValue())
+    updated_at = db.Column(db.DateTime, nullable=False, server_default=db.FetchedValue())
