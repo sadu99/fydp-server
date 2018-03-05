@@ -1,16 +1,17 @@
 import peakutils as peakutils
+import config
+import numpy as np
 import pandas as pd
 import scipy.integrate as integrate
 import scipy.special as special
-
 
 class TimeSeries:
     def __init__(self, time_axis, data_axis):
         self.time_axis = time_axis
         self.data_axis = data_axis
         self.max_time = max(time_axis)
-
         self.data_points_per_second = int(len(self.time_axis) / self.max_time)
+        self.peak_radius = self.data_points_per_second / 4
 
     def get_spikes(self, threshold):
         min_dist_between_spikes = self.data_points_per_second / 2
@@ -19,8 +20,8 @@ class TimeSeries:
         spikes = []
         for index in spike_indices:
 
-            start_index = index - self.data_points_per_second / 5
-            end_index = index + self.data_points_per_second / 5
+            start_index = index - self.peak_radius
+            end_index = index + self.peak_radius
 
             if start_index < 0:
                 start_index = 0
@@ -32,33 +33,34 @@ class TimeSeries:
                 "index": index,
                 "time": self.time_axis[index],
                 "min_value": min(self.data_axis[start_index: end_index]),
+                "start_index": start_index,
+                "end_index": end_index,
                 "max_value": self.data_axis[index]
             })
-
         return spikes
-
-
 
     def get_spike_windows(self):
         min_dist_between_spikes = self.data_points_per_second / 2
-        spike_indices = peakutils.indexes(self.data_axis, thres=0.75, min_dist=min_dist_between_spikes)
+        spike_indices = peakutils.indexes(self.data_axis, thres=config.TEST_THRESHOLD, min_dist=min_dist_between_spikes)
 
         spike_windows = []
         for spike_index in spike_indices:
-            start_index = spike_index - self.data_points_per_second / 5
-            end_index = spike_index + self.data_points_per_second / 5
-
-            if start_index < 0:
-                start_index = 0
-
-            if end_index >= len(self.time_axis):
-                end_index = len(self.time_axis) - 1
-
-            time_axis = self.time_axis[start_index: end_index]
-            data_axis = self.data_axis[start_index: end_index]
-            spike_window = SpikeWindow(time_axis, data_axis, spike_index)
-            spike_windows.append(spike_window)
+            spike_windows.append(self.get_spike_window(spike_index))
         return spike_windows
+
+    def get_spike_window(self, spike_index):
+        start_index = spike_index - self.peak_radius
+        end_index = spike_index + self.peak_radius
+
+        if start_index < 0:
+            start_index = 0
+
+        if end_index >= len(self.time_axis):
+            end_index = len(self.time_axis) - 1
+
+        time_axis = self.time_axis[start_index: end_index]
+        data_axis = self.data_axis[start_index: end_index]
+        return SpikeWindow(time_axis, data_axis, spike_index)
 
     def get_time_axis(self):
         return self.time_axis
