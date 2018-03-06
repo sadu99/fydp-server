@@ -4,7 +4,7 @@ import uuid
 from flask import request, json
 
 from handlers import APIError, _get_user
-from models import db, Activity
+from models import db, Activity, File
 
 
 def create_activity(user_id):
@@ -22,21 +22,72 @@ def create_activity(user_id):
     activity.user_id = user_id
 
     _create_activity(activity)
-    return json.dumps({"activity_id": activity.id}), 200
+    return json.dumps({"activity_id": activity.id}), 201
 
 
-def update_activity(user_id, activity_id):
+def create_activity_files(user_id, activity_id):
     data = request.get_json()
+
     if not data.get('stopped_at'):
         raise APIError("stopped_at is a required field", 400)
+
+    if not data.get('files'):
+        raise APIError("files is a required field", 400)
+
+    if not len(data.get('files')) > 1:
+        raise APIError("at least two files are required", 400)
 
     activity = _get_activity(activity_id)
     if not activity:
         raise APIError("activity does not exist", 404)
 
+    if not activity.user_id == user_id:
+        raise APIError("user is not allowed to access activity", 401)
+
+    files = []
+    response = {}
+
+    for file_name in data.get('files'):
+        file = File()
+        file.id = str(uuid.uuid4())
+        file.activity_id = activity_id
+        file.file_name = file_name
+        file.status = "upload_started"
+        files.append(file)
+        response[file_name] = file.id
     activity.stopped_at = data['stopped_at']
-    _update_activity()
-    return "", 204
+
+    _create_activity_files(files)
+    return json.dumps(response), 201
+
+
+def update_activity_file_status(user_id, activity_id):
+    data = request.get_json()
+
+    if not data.get('file_name'):
+        raise APIError("file_name is a required field", 400)
+
+    if not data.get('status'):
+        raise APIError("status is a required field", 400)
+
+    if not data.get('file_uploads_remaining'):
+        raise APIError("file_uploads_remaining is a required field", 400)
+
+    file = _get_file_with_name(data.get('file_name'))
+    if not file:
+        raise APIError("file does not exist", 404)
+
+    if not file.activity_id == activity_id:
+        raise APIError("file does not belong to activity", 400)
+
+    file.status = data.get('status')
+    _update_activity_file()
+
+    if data.get('file_uploads_remaining') == 0:
+        # TODO: process file
+        pass
+
+    return json.dumps({}), 200
 
 
 def get_activities(user_id):
@@ -55,6 +106,32 @@ def get_activities(user_id):
         } for activity in _get_activities_for_user(user)
     ]
     return json.dumps({"activities": activities}), 200
+
+
+def _create_activity_files(files):
+    try:
+        db.session.add_all(files)
+        db.session.commit()
+    except Exception:
+        traceback.print_exc()
+        raise APIError("failed to create new files", 500)
+
+
+def _get_file_with_name(file_name):
+    try:
+        file = db.session.query(File).filter_by(file_name=file_name).first()
+    except Exception:
+        traceback.print_exc()
+        raise APIError("failed to fetch file", 500)
+    return file
+
+
+def _update_activity_file():
+    try:
+        db.session.commit()
+    except Exception:
+        traceback.print_exc()
+        raise APIError("failed to update file", 500)
 
 
 def _create_activity(activity):

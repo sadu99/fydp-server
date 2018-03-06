@@ -26,8 +26,8 @@ def create_user():
     user.email = data['email']
     user.gender = data['gender']
 
-    _create_user()
-    return json.dumps({"user_id": user.id}), 200
+    _create_user(user)
+    return json.dumps({"user_id": user.id}), 201
 
 
 def _create_user(user):

@@ -25,7 +25,8 @@ app.add_url_rule('/users', view_func=users.create_user, methods=["POST"])
 # Activities
 app.add_url_rule('/users/<user_id>/activities', view_func=activities.get_activities, methods=["GET"])
 app.add_url_rule('/users/<user_id>/activities', view_func=activities.create_activity, methods=["POST"])
-app.add_url_rule('/users/<user_id>/activities/<activity_id>', view_func=activities.update_activity, methods=["PUT"])
+app.add_url_rule('/users/<user_id>/activities/<activity_id>/files', view_func=activities.create_activity_files, methods=["POST"])
+app.add_url_rule('/users/<user_id>/activities/<activity_id>/files/update_status', view_func=activities.update_activity_file_status, methods=["PUT"])
 
 
 @app.errorhandler(APIError)
