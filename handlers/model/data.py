@@ -98,7 +98,8 @@ for i in range(len(classes)):
                 max_y_value - min_y_value,
                 max_z_value,
                 min_z_value,
-                max_z_value - min_z_value
+                max_z_value - min_z_value,
+                spike["variance"]
             ])
             targets.append(i)
 
@@ -120,7 +121,6 @@ knn.fit(np.asarray(data), np.asarray(targets))
 #            metric_params=None, n_jobs=1, n_neighbors=5, p=2,
 #            weights='uniform')
 
-
 data_test = []
 
 # Read CSV File
@@ -132,7 +132,7 @@ acc_y_ts = TimeSeries(df['elapsed (s)'], df['y-axis (g)'])
 acc_z_ts = TimeSeries(df['elapsed (s)'], df['z-axis (g)'])
 
 # Extract Spikes
-spikes_x = acc_x_ts.get_spikes(0.5)
+spikes_x = acc_x_ts.get_spikes(config.TEST_THRESHOLD)
 
 for spike in spikes_x:
     max_y_value = max(acc_y_ts.data_axis[spike["start_index"]: spike["end_index"]])
@@ -150,13 +150,13 @@ for spike in spikes_x:
         max_y_value - min_y_value,
         max_z_value,
         min_z_value,
-        max_z_value - min_z_value
+        max_z_value - min_z_value,
+        spike["variance"]
     ])
 
 predicted = knn.predict(data_test)
 print len(predicted)
 print predicted
-print ''
 
 # correct, wrong = 0, 0
 # for i in range(len(predicted)):
