@@ -74,20 +74,11 @@ for i in range(len(classes)):
 
         for spike in spikes_x:
 
-            start_index = spike["index"] - acc_x_ts.data_points_per_second / 3
-            end_index = spike["index"] + acc_x_ts.data_points_per_second / 10
+            max_y_value = max(acc_y_ts.data_axis[spike["start_index"]: spike["end_index"]])
+            min_y_value = min(acc_y_ts.data_axis[spike["start_index"]: spike["end_index"]])
 
-            if start_index < 0:
-                start_index = 0
-
-            if end_index >= len(acc_x_ts.time_axis):
-                end_index = len(acc_x_ts.time_axis) - 1
-
-            max_y_value = max(acc_y_ts.data_axis[start_index: end_index])
-            min_y_value = min(acc_y_ts.data_axis[start_index: end_index])
-
-            max_z_value = max(acc_z_ts.data_axis[start_index: end_index])
-            min_z_value = min(acc_z_ts.data_axis[start_index: end_index])
+            max_z_value = max(acc_z_ts.data_axis[spike["start_index"]: spike["end_index"]])
+            min_z_value = min(acc_z_ts.data_axis[spike["start_index"]: spike["end_index"]])
 
             data.append([
                 spike["max_value"],
