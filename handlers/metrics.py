@@ -37,8 +37,8 @@ data = {
 }
 
 # Read CSV File
-file = "Jump/3_left_acc.csv"
-x_threshold = 0.6
+file = "Testing/3_right_acc.csv"
+x_threshold = 0.5
 # y_threshold = 0.8
 # z_threshold = 0.8
 df = pd.read_csv("../Supervised Data/%s" % file)
@@ -59,7 +59,7 @@ spike_windows_y = acc_y_ts.get_spike_windows()
 spike_windows_z = acc_z_ts.get_spike_windows()
 
 # Extract Spikes
-spikes_x = acc_x_ts.get_negative_spikes(x_threshold)
+spikes_x = acc_x_ts.get_spikes(x_threshold)
 # spikes_y = acc_y_ts.get_spikes(y_threshold)
 # spikes_z = acc_z_ts.get_spikes(z_threshold)
 

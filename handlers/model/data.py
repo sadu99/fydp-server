@@ -39,10 +39,12 @@ from sklearn import datasets
 
 from handlers.model.time_series import TimeSeries
 
-classes = ["Jump", "Walk", "Run", "Load", "Noise"]
+classes = ["Jump", "Walk", "Run", "Noise"]
 threshold_map = {
-    1: {"Jump": 0.70,  "Walk": 0.7, "Run": 0.65, "Load": 0.7, "Noise": 0.55},
-    2: {"Jump": 0.80, "Walk": 0.7, "Run": 0.68, "Load": 0.45, "Noise": 0.5},
+    1: {"Jump": 0.60,  "Walk": 0.7, "Run": 0.65, "Load": 0.5, "Noise": 0.55},
+    2: {"Jump": 0.60, "Walk": 0.7, "Run": 0.68, "Load": 0.71, "Noise": 0.5},
+    3: {"Jump": 0.60, "Walk": 0.8, "Run": 0.8, "Load": 0.45, "Noise": 0.5},
+    4: {"Jump": 0.55, "Walk": 0.8, "Run": 0.7, "Load": 0.51, "Noise": 0.5},
 }
 data = []
 targets = [] # what class each point actually is
@@ -69,11 +71,11 @@ for i in range(len(classes)):
         acc_y_ts = TimeSeries(df['elapsed (s)'], df['y-axis (g)'])
         acc_z_ts = TimeSeries(df['elapsed (s)'], df['z-axis (g)'])
 
-        # Extract Spikes
-        spikes_x = acc_x_ts.get_spikes(threshold_map[file_idx][classes[i]])
+        # Extract Spikes, use negative spikes if data is jump/load
+        spikes_x = acc_x_ts.get_negative_spikes(threshold_map[file_idx][classes[i]]) if classes[i] == "Jump" or classes[i] == "Load" \
+            else acc_x_ts.get_spikes(threshold_map[file_idx][classes[i]])
 
         for spike in spikes_x:
-
             max_y_value = max(acc_y_ts.data_axis[spike["start_index"]: spike["end_index"]])
             min_y_value = min(acc_y_ts.data_axis[spike["start_index"]: spike["end_index"]])
 
@@ -83,13 +85,13 @@ for i in range(len(classes)):
             data.append([
                 spike["max_value"],
                 spike["min_value"],
-                spike["max_value"] - spike["min_value"],
-                max_y_value,
-                min_y_value,
-                max_y_value - min_y_value,
+                # spike["max_value"] - spike["min_value"],
+                # max_y_value,
+                # min_y_value,
+                # max_y_value - min_y_value,
                 max_z_value,
                 min_z_value,
-                max_z_value - min_z_value,
+                # max_z_value - min_z_value,
                 spike["variance"]
             ])
             targets.append(i)
@@ -135,13 +137,13 @@ for spike in spikes_x:
     data_test.append([
         spike["max_value"],
         spike["min_value"],
-        spike["max_value"] - spike["min_value"],
-        max_y_value,
-        min_y_value,
-        max_y_value - min_y_value,
+        # spike["max_value"] - spike["min_value"],
+        # max_y_value,
+        # min_y_value,
+        # max_y_value - min_y_value,
         max_z_value,
         min_z_value,
-        max_z_value - min_z_value,
+        # max_z_value - min_z_value,
         spike["variance"]
     ])
 
