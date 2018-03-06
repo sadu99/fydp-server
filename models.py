@@ -26,7 +26,6 @@ class File(db.Model):
 
     id = db.Column(db.String(36), primary_key=True)
     file_name = db.Column(db.String(255), nullable=False)
-    file_size_mb = db.Column(db.Float(asdecimal=True), nullable=False)
     status = db.Column(db.String(255), nullable=False)
     activity_id = db.Column(db.ForeignKey(u'activities.id', ondelete=u'CASCADE', onupdate=u'CASCADE'), nullable=False, index=True)
     created_at = db.Column(db.DateTime, nullable=False, server_default=db.FetchedValue())
