@@ -3,7 +3,7 @@
 from flask import Flask, jsonify
 
 import config
-from handlers import users, activities, APIError, health
+from handlers import users, activities, APIError, health, history
 from models import db
 
 app = Flask(__name__)
@@ -25,8 +25,12 @@ app.add_url_rule('/users', view_func=users.create_user, methods=["POST"])
 # Activities
 app.add_url_rule('/users/<user_id>/activities', view_func=activities.get_activities, methods=["GET"])
 app.add_url_rule('/users/<user_id>/activities', view_func=activities.create_activity, methods=["POST"])
+app.add_url_rule('/users/<user_id>/activities/<activity_id>/jumps', view_func=activities.get_activity_jumps, methods=["GET"])
 app.add_url_rule('/users/<user_id>/activities/<activity_id>/files', view_func=activities.create_activity_files, methods=["POST"])
 app.add_url_rule('/users/<user_id>/activities/<activity_id>/files/update_status', view_func=activities.update_activity_file_status, methods=["PUT"])
+
+# History
+app.add_url_rule('/users/<user_id>/jumps', view_func=history.get_historical_jumps, methods=["GET"])
 
 
 @app.errorhandler(APIError)

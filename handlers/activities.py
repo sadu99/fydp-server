@@ -108,6 +108,34 @@ def get_activities(user_id):
     return json.dumps({"activities": activities}), 200
 
 
+def get_activity_jumps(user_id, activity_id):
+    activity = _get_activity(activity_id)
+    if not activity:
+        raise APIError("invalid activity", 400)
+
+    jumps = [
+        {
+            "jump_id": jump.id,
+            "activity_id": jump.activity_id,
+            "jump_time": jump.jump_time,
+            "user_id": jump.user_id,
+            "abduction_angle": str(jump.abduction_angle),
+            "created_at": jump.created_at,
+            "updated_at": jump.updated_at
+        } for jump in _get_jumps_for_activity(activity)
+    ]
+    return json.dumps({"jumps": jumps}), 200
+
+
+def _get_jumps_for_activity(activity):
+    try:
+        jumps = activity.jumps
+    except Exception:
+        traceback.print_exc()
+        raise APIError("failed to fetch jumps for activity", 500)
+    return jumps
+
+
 def _create_activity_files(files):
     try:
         db.session.add_all(files)
