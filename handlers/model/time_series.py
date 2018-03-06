@@ -11,32 +11,36 @@ class TimeSeries:
         self.data_axis = data_axis
         self.max_time = max(time_axis)
         self.data_points_per_second = int(len(self.time_axis) / self.max_time)
-        self.peak_radius = self.data_points_per_second / 4
+        self.spike_radius = self.data_points_per_second / 4
+
+    def get_spike(self, index):
+        start_index = 0 if index < self.spike_radius else index - self.spike_radius
+        end_index = len(self.time_axis) - 1 if index > len(self.time_axis) - self.spike_radius else index + self.spike_radius
+        return {
+            "index": index,
+            "time": self.time_axis[index],
+            "min_value": min(self.data_axis[start_index: end_index]),
+            "start_index": start_index,
+            "end_index": end_index,
+            "max_value": max(self.data_axis[start_index: end_index]),
+            "variance": np.var(self.get_spike_window(index).data_axis)
+        }
 
     def get_spikes(self, threshold):
-        min_dist_between_spikes = self.data_points_per_second / 2
-        spike_indices = peakutils.indexes(self.data_axis, thres=threshold, min_dist=min_dist_between_spikes)
-
+        spike_indices = peakutils.indexes(self.data_axis, thres=threshold, min_dist=2*self.spike_radius)
         spikes = []
+
         for index in spike_indices:
+            spikes.append(self.get_spike(index))
+        return spikes
 
-            start_index = index - self.peak_radius
-            end_index = index + self.peak_radius
+    def get_negative_spikes(self, threshold):
+        spikes = []
+        negative_ts = pd.Series([val * -1 for val in self.data_axis.values])
+        spike_indices = peakutils.indexes(negative_ts, thres=threshold, min_dist=2*self.spike_radius)
 
-            if start_index < 0:
-                start_index = 0
-
-            if end_index >= len(self.time_axis):
-                end_index = len(self.time_axis) - 1
-
-            spikes.append({
-                "index": index,
-                "time": self.time_axis[index],
-                "min_value": min(self.data_axis[start_index: end_index]),
-                "start_index": start_index,
-                "end_index": end_index,
-                "max_value": self.data_axis[index]
-            })
+        for index in spike_indices:
+            spikes.append(self.get_spike(index))
         return spikes
 
     def get_spike_windows(self):
@@ -49,8 +53,8 @@ class TimeSeries:
         return spike_windows
 
     def get_spike_window(self, spike_index):
-        start_index = spike_index - self.peak_radius
-        end_index = spike_index + self.peak_radius
+        start_index = spike_index - self.spike_radius
+        end_index = spike_index + self.spike_radius
 
         if start_index < 0:
             start_index = 0
