@@ -31,6 +31,9 @@ def create_activity_files(user_id, activity_id):
     if not data.get('stopped_at'):
         raise APIError("stopped_at is a required field", 400)
 
+    if not data.get('rpe'):
+        raise APIError("rpe is a required field", 400)
+
     if not data.get('files'):
         raise APIError("files is a required field", 400)
 
@@ -55,6 +58,8 @@ def create_activity_files(user_id, activity_id):
         file.status = "upload_started"
         files.append(file)
         response[file_name] = file.id
+
+    activity.rpe = data['rpe']
     activity.stopped_at = data['stopped_at']
 
     _create_activity_files(files)
@@ -83,9 +88,10 @@ def update_activity_file_status(user_id, activity_id):
     file.status = data.get('status')
     _update_activity_file()
 
-    if data.get('file_uploads_remaining') == 0:
-        # TODO: process file
-        pass
+    if not data.get('file_uploads_remaining') == 0:
+        return "", 204
+
+    # TODO: process file
 
     return json.dumps({}), 200
 
@@ -99,6 +105,7 @@ def get_activities(user_id):
         {
             "activity_id": activity.id,
             "activity_type": activity.activity_type,
+            "rpe": activity.rpe,
             "user_id": activity.user_id,
             "started_at": activity.started_at,
             "stopped_at": activity.stopped_at,

@@ -1,5 +1,5 @@
 # coding: utf-8
-from sqlalchemy import Column, DateTime, Float, ForeignKey, String
+from sqlalchemy import Column, DateTime, Float, ForeignKey, Integer, String
 from sqlalchemy.schema import FetchedValue
 from sqlalchemy.orm import relationship
 from flask_sqlalchemy import SQLAlchemy
@@ -17,6 +17,7 @@ class Activity(db.Model):
     started_at = db.Column(db.DateTime, nullable=False, server_default=db.FetchedValue())
     stopped_at = db.Column(db.DateTime)
     updated_at = db.Column(db.DateTime, nullable=False, server_default=db.FetchedValue())
+    rpe = db.Column(db.Integer)
 
     user = db.relationship(u'User', primaryjoin='Activity.user_id == User.id', backref=u'activities')
 
