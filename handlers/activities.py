@@ -90,7 +90,7 @@ def update_activity_file_status(user_id, activity_id):
     file.status = data.get('status')
     _update_activity_file()
 
-    if not data.get('file_uploads_remaining') == 0:
+    if not int(data.get('file_uploads_remaining')) == 0:
         return "", 204
 
     activity = _get_activity(activity_id)
