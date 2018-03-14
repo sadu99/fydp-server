@@ -1,5 +1,6 @@
 import traceback
 import uuid
+from handlers.model.classification_model import ClassificationModel
 
 import datetime
 from flask import request, json

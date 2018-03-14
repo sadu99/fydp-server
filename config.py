@@ -1,7 +1,7 @@
 import os
 
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
-TEST_THRESHOLD = 0.5
+TEST_THRESHOLD = 0.4
 
 def get_db_conn_str():
     db_name = os.environ.get("DB_NAME", '')

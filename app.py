@@ -5,6 +5,7 @@ from flask import Flask, jsonify
 import config
 from handlers import users, activities, APIError, health, history
 from models import db
+from handlers.model.classification_model import ClassificationModel
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = config.get_db_conn_str()
@@ -39,6 +40,9 @@ def handle_api_error(error):
     response.status_code = error.status_code
     return response
 
+# Initialize model data
+model = ClassificationModel()
+model.train_model()
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', threaded=True)
