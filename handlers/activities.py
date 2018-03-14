@@ -1,5 +1,6 @@
 import traceback
 import uuid
+from handlers.model.classification_model import ClassificationModel
 
 from flask import request, json
 
@@ -92,6 +93,7 @@ def update_activity_file_status(user_id, activity_id):
         return "", 204
 
     # TODO: process file
+
 
     return json.dumps({}), 200
 
