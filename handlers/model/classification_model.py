@@ -103,7 +103,6 @@ class ClassificationModel:
 
         # Create and fit a nearest-neighbor classifier
         self.model.fit(np.asarray(data), np.asarray(targets))
-        self.get_abduction_angles("1")
 
     def test_classifier(self, file_path):
         data_test = []
@@ -223,6 +222,6 @@ class ClassificationModel:
                     }
                     jumps.append(jump)
                     print abduction_angle
-                    # plt.plot(roll_ts.time_axis[euler_start_idx:euler_end_idx], roll_ts.data_axis[euler_start_idx:euler_end_idx], '--r')
+            #         plt.plot(roll_ts.time_axis[euler_start_idx:euler_end_idx], roll_ts.data_axis[euler_start_idx:euler_end_idx], '--r')
             # plt.show()
         return jumps
