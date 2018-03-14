@@ -2,10 +2,11 @@ import traceback
 import uuid
 from handlers.model.classification_model import ClassificationModel
 
+import datetime
 from flask import request, json
 
 from handlers import APIError, _get_user
-from models import db, Activity, File
+from models import db, Activity, File, Jump
 
 
 def create_activity(user_id):
@@ -92,10 +93,30 @@ def update_activity_file_status(user_id, activity_id):
     if not data.get('file_uploads_remaining') == 0:
         return "", 204
 
-    # TODO: process file
+    activity = _get_activity(activity_id)
+    files = _get_files_for_activity(activity)
 
+    try:
+        from app import model
+        metrics = model.process_files(files)
+    except Exception:
+        traceback.print_exc()
+        raise APIError("failed to process files for activity", 500)
 
-    return json.dumps({}), 200
+    jumps = []
+    for metric in metrics:
+        jump = Jump()
+        jump.id = activity.id = str(uuid.uuid4())
+        jump.activity_id = activity_id
+        jump.user_id = user_id
+        jump.jump_date = datetime.datetime.now().strftime("%Y-%m-%d")
+        jump.leg = metric["leg"]
+        jump.severity = metric["severity"]
+        jump.jump_time = metric["jump_time"]
+        jump.abduction_angle = metric["abduction_angle"]
+
+    _create_activity_jumps(jumps)
+    return json.dumps({metrics}), 200
 
 
 def get_activities(user_id):
@@ -143,6 +164,15 @@ def _get_jumps_for_activity(activity):
         traceback.print_exc()
         raise APIError("failed to fetch jumps for activity", 500)
     return jumps
+
+
+def _create_activity_jumps(jumps):
+    try:
+        db.session.add_all(jumps)
+        db.session.commit()
+    except Exception:
+        traceback.print_exc()
+        raise APIError("failed to create new jumps", 500)
 
 
 def _create_activity_files(files):
@@ -204,3 +234,12 @@ def _get_activities_for_user(user):
         traceback.print_exc()
         raise APIError("failed to fetch activities for user", 500)
     return activities
+
+
+def _get_files_for_activity(activity):
+    try:
+        files = activity.files
+    except Exception:
+        traceback.print_exc()
+        raise APIError("failed to fetch files for activity", 500)
+    return files

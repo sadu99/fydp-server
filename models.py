@@ -42,7 +42,10 @@ class Jump(db.Model):
     activity_id = db.Column(db.ForeignKey(u'activities.id', ondelete=u'CASCADE', onupdate=u'CASCADE'), nullable=False, index=True)
     user_id = db.Column(db.ForeignKey(u'users.id', ondelete=u'CASCADE', onupdate=u'CASCADE'), nullable=False, index=True)
     jump_date = db.Column(db.Date, nullable=False)
+    jump_time = db.Column(db.Integer, nullable=False)
     abduction_angle = db.Column(db.Float(asdecimal=True), nullable=False)
+    severity = db.Column(db.Float(asdecimal=True), nullable=False)
+    leg = db.Column(db.String(36))
     created_at = db.Column(db.DateTime, nullable=False, server_default=db.FetchedValue())
     updated_at = db.Column(db.DateTime, nullable=False, server_default=db.FetchedValue())
 
