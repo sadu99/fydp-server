@@ -96,7 +96,7 @@ def update_activity_file_status(user_id, activity_id):
     activity = _get_activity(activity_id)
     files = _get_files_for_activity(activity)
 
-    file__name_array = [file["file_name"].split("_")[0] for file in files]
+    file__name_array = [file.file_name.split("_")[0] for file in files]
 
     try:
         from app import model
