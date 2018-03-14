@@ -64,7 +64,7 @@ class ClassificationModel:
             left_or_right = "left"
             while not files_ended:
                 # Read CSV File
-                DATA_PATH = os.path.join(config.ROOT_DIR, 'data')
+                DATA_PATH = os.path.join(config.ROOT_DIR, 'supervised_data')
                 file_idx += 1
                 path = "%s/%s/%s_acc_%s.csv" % (DATA_PATH, classes[i], file_idx, left_or_right)
                 if not os.path.exists(path):
