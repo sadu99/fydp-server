@@ -1,5 +1,5 @@
 # coding: utf-8
-from sqlalchemy import Column, DateTime, Float, ForeignKey, Integer, String
+from sqlalchemy import Column, Date, DateTime, Float, ForeignKey, Integer, String
 from sqlalchemy.schema import FetchedValue
 from sqlalchemy.orm import relationship
 from flask_sqlalchemy import SQLAlchemy
@@ -41,10 +41,8 @@ class Jump(db.Model):
     id = db.Column(db.String(36), primary_key=True)
     activity_id = db.Column(db.ForeignKey(u'activities.id', ondelete=u'CASCADE', onupdate=u'CASCADE'), nullable=False, index=True)
     user_id = db.Column(db.ForeignKey(u'users.id', ondelete=u'CASCADE', onupdate=u'CASCADE'), nullable=False, index=True)
-    jump_time = db.Column(db.DateTime, nullable=False)
+    jump_date = db.Column(db.Date, nullable=False)
     abduction_angle = db.Column(db.Float(asdecimal=True), nullable=False)
-    adduction_angle = db.Column(db.Float(asdecimal=True), nullable=False)
-    flexion_angle = db.Column(db.Float(asdecimal=True), nullable=False)
     created_at = db.Column(db.DateTime, nullable=False, server_default=db.FetchedValue())
     updated_at = db.Column(db.DateTime, nullable=False, server_default=db.FetchedValue())
 
