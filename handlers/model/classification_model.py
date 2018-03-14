@@ -103,6 +103,7 @@ class ClassificationModel:
 
         # Create and fit a nearest-neighbor classifier
         self.model.fit(np.asarray(data), np.asarray(targets))
+        self.get_abduction_angles("1")
 
     def test_classifier(self, file_path):
         data_test = []
@@ -143,15 +144,13 @@ class ClassificationModel:
 
     def get_abduction_angles(self, file_name):
         home = os.path.expanduser("~")
-        data_test = []
         jumps = []
         sides = ["left", "right"]
 
         for side in sides:
-            # Get abduction angles for left leg
-            # Read CSV File
             acc_file = pd.read_csv("%s/data/%s_acc_%s.csv" % (home, file_name, side))
             euler_file = pd.read_csv("%s/data/%s_euler_%s.csv" % (home, file_name, side))
+            data_test = []
 
             # Build TimeSeries Objects
             acc_x_ts = TimeSeries(acc_file['time'], acc_file['x'])
