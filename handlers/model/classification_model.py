@@ -227,3 +227,5 @@ class ClassificationModel:
                     # plt.plot(roll_ts.time_axis[euler_start_idx:euler_end_idx], roll_ts.data_axis[euler_start_idx:euler_end_idx], '--r')
             # plt.show()
         return jumps
+
+model = ClassificationModel()

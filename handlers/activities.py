@@ -1,11 +1,12 @@
 import traceback
 import uuid
-from handlers.model.classification_model import ClassificationModel
+from sets import Set
 
 import datetime
 from flask import request, json
 
 from handlers import APIError, _get_user
+from handlers.model.classification_model import model
 from models import db, Activity, File, Jump
 
 
@@ -96,26 +97,29 @@ def update_activity_file_status(user_id, activity_id):
     activity = _get_activity(activity_id)
     files = _get_files_for_activity(activity)
 
-    file__name_array = [file.file_name.split("_")[0] for file in files]
-
-    try:
-        from app import model
-        metrics = model.process_files(file__name_array)
-    except Exception:
-        traceback.print_exc()
-        raise APIError("failed to process files for activity", 500)
+    file_name_array = [file.file_name.split("_")[0] for file in files]
+    file_name_set = Set(file_name_array)
 
     jumps = []
-    for metric in metrics:
-        jump = Jump()
-        jump.id = activity.id = str(uuid.uuid4())
-        jump.activity_id = activity_id
-        jump.user_id = user_id
-        jump.jump_date = datetime.datetime.now().strftime("%Y-%m-%d")
-        jump.leg = metric["leg"]
-        jump.severity = metric["severity"]
-        jump.jump_time = metric["jump_time"]
-        jump.abduction_angle = metric["abduction_angle"]
+
+    for file_name in file_name_set:
+        try:
+            metrics = model.model.process_files(file_name_array)
+        except Exception:
+            traceback.print_exc()
+            raise APIError("failed to process files for activity", 500)
+
+        for metric in metrics:
+            jump = Jump()
+            jump.id = activity.id = str(uuid.uuid4())
+            jump.activity_id = activity_id
+            jump.user_id = user_id
+            jump.jump_date = datetime.datetime.now().strftime("%Y-%m-%d")
+            jump.leg = metric["leg"]
+            jump.severity = metric["severity"]
+            jump.jump_time = metric["jump_time"]
+            jump.abduction_angle = metric["abduction_angle"]
+            jumps.append(jump)
 
     _create_activity_jumps(jumps)
     return json.dumps({metrics}), 200
