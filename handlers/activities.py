@@ -122,7 +122,7 @@ def update_activity_file_status(user_id, activity_id):
             jumps.append(jump)
 
     _create_activity_jumps(jumps)
-    return json.dumps({"jumps": jumps}), 200
+    return "activity successfully processed", 200
 
 
 def get_activities(user_id):
