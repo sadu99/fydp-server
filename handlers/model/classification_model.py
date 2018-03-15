@@ -1,5 +1,3 @@
-# Split iris data in train and test data
-# A random permutation, to split the data randomly
 import pandas as pd
 import os
 import config
@@ -103,6 +101,7 @@ class ClassificationModel:
 
         # Create and fit a nearest-neighbor classifier
         self.model.fit(np.asarray(data), np.asarray(targets))
+        self.get_abduction_angles('1')
 
     def test_classifier(self, file_path):
         data_test = []
@@ -162,8 +161,8 @@ class ClassificationModel:
             yaw = np.array(euler_file['yaw'])
             euler_times = np.array(euler_file['time'])
             self.mod_euler_angles(pitch, roll, yaw)
-            pitch_ts = TimeSeries(euler_file['time'], euler_file['pitch'])
-            roll_ts = TimeSeries(euler_file['time'], euler_file['roll'])
+            pitch_ts = TimeSeries(euler_file['time'], pd.Series(pitch))
+            roll_ts = TimeSeries(euler_file['time'], pd.Series(roll))
 
             # Extract Spikes
             spikes_x = acc_x_ts.get_negative_spikes(config.TEST_THRESHOLD)
@@ -189,11 +188,11 @@ class ClassificationModel:
 
             predictions = self.model.predict(data_test)
             acc_times = np.array(acc_file['time'])
-            prev_start_idx = prev_end_idx = 0
+            current_idx = 0
 
             # plt.figure(figsize=(14, 7))
-            # plt.plot(euler_file['time'], euler_file['roll'])
-            # plt.title('roll')
+            # plt.plot(euler_file['time'], pd.Series(pitch))
+            # plt.title('pitch for %s' % side)
 
             for idx, prediction in enumerate(predictions):
                 # process a jump
@@ -201,18 +200,18 @@ class ClassificationModel:
                     start_time = acc_times[spikes_x[idx]["start_index"]]
                     end_time = acc_times[spikes_x[idx]["end_index"]]
 
-                    while euler_times[prev_start_idx] < start_time:
-                        prev_start_idx += 1
-                    euler_start_idx = prev_start_idx
-                    euler_start_angle = roll[euler_start_idx]
-                    while euler_times[prev_start_idx] < end_time:
-                        prev_start_idx += 1
-                    euler_end_idx = prev_start_idx
-                    euler_end_angle = roll[euler_end_idx]
+                    while euler_times[current_idx] < start_time:
+                        current_idx += 1
+                    euler_start_idx = current_idx
+                    euler_start_angle = pitch[euler_start_idx]
+                    while euler_times[current_idx + 1] < end_time:
+                        current_idx += 1
+                    euler_end_idx = current_idx
+                    euler_end_angle = pitch[euler_end_idx]
 
-                    peak_angle = min(roll[euler_start_idx:euler_end_idx])
-                    abduction_angle = abs(peak_angle - euler_end_angle) if not spikes_x[idx]["left_stable"] and spikes_x[idx]["right_stable"] \
-                        else abs(peak_angle - euler_start_angle)
+                    peak_angle = max(pitch[euler_start_idx:euler_end_idx])
+                    reference_angle = euler_end_angle if not spikes_x[idx]["left_stable"] and spikes_x[idx]["right_stable"] else euler_start_angle
+                    abduction_angle = abs(peak_angle - reference_angle)
 
                     jump = {
                         "abduction_angle": abduction_angle,
@@ -221,7 +220,9 @@ class ClassificationModel:
                         "leg": side
                     }
                     jumps.append(jump)
-                    print abduction_angle
-            #         plt.plot(roll_ts.time_axis[euler_start_idx:euler_end_idx], roll_ts.data_axis[euler_start_idx:euler_end_idx], '--r')
+                    # print "%s: %s = %s - %s" % (side, abduction_angle, peak_angle, reference_angle)
+            #         plt.plot(jump["jump_time"], peak_angle, 'ro')
+            #         plt.plot(jump["jump_time"], reference_angle, 'go')
+            #         plt.plot(pitch_ts.time_axis[euler_start_idx:euler_end_idx], pitch_ts.data_axis[euler_start_idx:euler_end_idx], '--r')
             # plt.show()
         return jumps
