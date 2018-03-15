@@ -131,7 +131,6 @@ class ClassificationModel:
 
         # Create and fit a nearest-neighbor classifier
         self.model.fit(np.asarray(data), np.asarray(targets))
-        self.test_classifier('3')
 
     def test_classifier(self, file_name):
         data_test = []
