@@ -111,18 +111,18 @@ def update_activity_file_status(user_id, activity_id):
 
         for metric in metrics:
             jump = Jump()
-            jump.id = activity.id = str(uuid.uuid4())
+            jump.id = str(uuid.uuid4())
             jump.activity_id = activity_id
             jump.user_id = user_id
             jump.jump_date = datetime.datetime.now().strftime("%Y-%m-%d")
             jump.leg = metric["leg"]
-            jump.severity = metric["severity"]
-            jump.jump_time = metric["jump_time"]
-            jump.abduction_angle = metric["abduction_angle"]
+            jump.severity = float(metric["severity"])
+            jump.jump_time = int(metric["jump_time"])
+            jump.abduction_angle = float(metric["abduction_angle"])
             jumps.append(jump)
 
     _create_activity_jumps(jumps)
-    return json.dumps({metrics}), 200
+    return json.dumps({"jumps": jumps}), 200
 
 
 def get_activities(user_id):
