@@ -140,6 +140,20 @@ class ClassificationModel:
         print predicted
         return predicted
 
+    # Given a acceleration spike, find the corresponding range of a spike for euler angles
+    def find_euler_time(self, spike, acc_times, euler_times):
+        current_idx = 0
+        start_time = acc_times[spike["start_index"]]
+        end_time = acc_times[spike["end_index"]]
+
+        while euler_times[current_idx] < start_time:
+            current_idx += 1
+        euler_start_idx = current_idx
+        while euler_times[current_idx + 1] < end_time:
+            current_idx += 1
+        euler_end_idx = current_idx
+        return euler_start_idx, euler_end_idx
+
     def get_abduction_angles(self, file_name):
         home = os.path.expanduser("~")
         jumps = []
@@ -188,7 +202,6 @@ class ClassificationModel:
 
             predictions = self.model.predict(data_test)
             acc_times = np.array(acc_file['time'])
-            current_idx = 0
 
             # plt.figure(figsize=(14, 7))
             # plt.plot(euler_file['time'], pd.Series(pitch))
@@ -197,18 +210,9 @@ class ClassificationModel:
             for idx, prediction in enumerate(predictions):
                 # process a jump
                 if prediction == 0:
-                    start_time = acc_times[spikes_x[idx]["start_index"]]
-                    end_time = acc_times[spikes_x[idx]["end_index"]]
-
-                    while euler_times[current_idx] < start_time:
-                        current_idx += 1
-                    euler_start_idx = current_idx
+                    euler_start_idx, euler_end_idx = self.find_euler_time(spikes_x[idx], acc_times, euler_times)
                     euler_start_angle = pitch[euler_start_idx]
-                    while euler_times[current_idx + 1] < end_time:
-                        current_idx += 1
-                    euler_end_idx = current_idx
                     euler_end_angle = pitch[euler_end_idx]
-
                     peak_angle = max(pitch[euler_start_idx:euler_end_idx])
                     reference_angle = euler_end_angle if not spikes_x[idx]["left_stable"] and spikes_x[idx]["right_stable"] else euler_start_angle
                     abduction_angle = abs(peak_angle - reference_angle)
@@ -220,9 +224,10 @@ class ClassificationModel:
                         "leg": side
                     }
                     jumps.append(jump)
-                    # print "%s: %s = %s - %s" % (side, abduction_angle, peak_angle, reference_angle)
+            #         print "%s: %s = %s - %s" % (side, abduction_angle, peak_angle, reference_angle)
             #         plt.plot(jump["jump_time"], peak_angle, 'ro')
             #         plt.plot(jump["jump_time"], reference_angle, 'go')
             #         plt.plot(pitch_ts.time_axis[euler_start_idx:euler_end_idx], pitch_ts.data_axis[euler_start_idx:euler_end_idx], '--r')
             # plt.show()
         return jumps
+
