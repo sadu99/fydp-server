@@ -60,7 +60,7 @@ data = {
 x_threshold = 0.4
 file_idx = '3'
 activity = 'Testing'
-path_left = "../data/%s/%s_acc_left.csv" % (activity, file_idx)
+path_left = "../supervised_data/%s/%s_acc_left.csv" % (activity, file_idx)
 df = pd.read_csv(path_left)
 
 # Clean Incoming Data
@@ -90,7 +90,7 @@ for spike in spikes_x:
         plt.plot(acc_x_ts.time_axis[spike["start_index"]:spike["end_index"]], spike["values"], '--g')
 
 
-path_right = "../data/%s/%s_acc_right.csv" % (activity, file_idx)
+path_right = "../supervised_data/%s/%s_acc_right.csv" % (activity, file_idx)
 df = pd.read_csv(path_right)
 
 # Clean Incoming Data
@@ -119,23 +119,23 @@ for spike in spikes_x:
         plt.plot(acc_x_ts.time_axis[spike["start_index"]:spike["end_index"]], spike["values"], '--g')
 
 
-path_euler_left = "../data/Testing/%s_euler_left.csv" % file_idx
-df = pd.read_csv(path_euler_left)
-
-pitch_threshold = 0.75
-pitch = np.array(df['pitch'])
-roll = np.array(df['roll'])
-yaw = np.array(df['yaw'])
-mod_euler_angles(pitch, roll, yaw)
-
-pitch_ts = TimeSeries(df['time'], pd.Series(pitch))
-pitch_spikes = pitch_ts.get_negative_spikes(pitch_threshold)
-
-plt.figure(figsize=(14, 7))
-plt.plot(df['time'], pd.Series(pitch))
-plt.title("pitch, threshold = %s" % pitch_threshold)
-for spike in pitch_spikes:
-    plt.plot(pitch_ts.time_axis[spike["start_index"]:spike["end_index"]], spike["values"], '--r')
+# path_euler_left = "../supervised_data/Testing/%s_euler_left.csv" % file_idx
+# df = pd.read_csv(path_euler_left)
+#
+# pitch_threshold = 0.75
+# pitch = np.array(df['pitch'])
+# roll = np.array(df['roll'])
+# yaw = np.array(df['yaw'])
+# mod_euler_angles(pitch, roll, yaw)
+#
+# pitch_ts = TimeSeries(df['time'], pd.Series(pitch))
+# pitch_spikes = pitch_ts.get_negative_spikes(pitch_threshold)
+#
+# plt.figure(figsize=(14, 7))
+# plt.plot(df['time'], pd.Series(pitch))
+# plt.title("pitch, threshold = %s" % pitch_threshold)
+# for spike in pitch_spikes:
+#     plt.plot(pitch_ts.time_axis[spike["start_index"]:spike["end_index"]], spike["values"], '--r')
 
 
 
