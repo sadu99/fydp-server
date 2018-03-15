@@ -104,7 +104,7 @@ def update_activity_file_status(user_id, activity_id):
 
     for file_name in file_name_set:
         try:
-            metrics = model.model.process_files(file_name_array)
+            metrics = model.model.process_file(file_name)
         except Exception:
             traceback.print_exc()
             raise APIError("failed to process files for activity", 500)

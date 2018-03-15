@@ -215,7 +215,7 @@ class ClassificationModel:
         euler_end_idx = current_idx
         return euler_start_idx, euler_end_idx
 
-    def get_abduction_angles(self, file_name):
+    def process_file(self, file_name):
         home = os.path.expanduser("~")
         jumps = []
         sides = ["left", "right"]
