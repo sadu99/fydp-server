@@ -57,9 +57,9 @@ data = {
 }
 
 # Read CSV File
-x_threshold = 0.4
-file_idx = '3'
-activity = 'Testing'
+x_threshold = 0.7
+file_idx = '2'
+activity = 'Jump'
 path_left = "../supervised_data/%s/%s_acc_left.csv" % (activity, file_idx)
 df = pd.read_csv(path_left)
 
