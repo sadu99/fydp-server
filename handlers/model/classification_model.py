@@ -338,12 +338,12 @@ class ClassificationModel:
                     match_found = True
                     matched_jumps.append(jump)
 
-                    euler_start_idx = jump["jump_start_index"]
-                    euler_end_idx = jump["jump_end_index"]
-                    plt.plot(jump["jump_time"], peak_angle, 'ro')
-                    plt.plot(jump["jump_time"], reference_angle, 'go')
-                    plt.plot(pitch_ts.time_axis[euler_start_idx:euler_end_idx],
-                             pitch_ts.data_axis[euler_start_idx:euler_end_idx], '--r')
+                    # euler_start_idx = jump["jump_start_index"]
+                    # euler_end_idx = jump["jump_end_index"]
+                    # plt.plot(jump["jump_time"], peak_angle, 'ro')
+                    # plt.plot(jump["jump_time"], reference_angle, 'go')
+                    # plt.plot(pitch_ts.time_axis[euler_start_idx:euler_end_idx],
+                    #          pitch_ts.data_axis[euler_start_idx:euler_end_idx], '--r')
                 idx += 1
 
         # plt.figure(figsize=(14, 7))
