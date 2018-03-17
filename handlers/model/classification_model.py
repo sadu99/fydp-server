@@ -346,15 +346,15 @@ class ClassificationModel:
                              pitch_ts.data_axis[euler_start_idx:euler_end_idx], '--r')
                 idx += 1
 
-        plt.figure(figsize=(14, 7))
-        plt.plot(right_acc_file['time'], right_acc_file['x'], 'b')
-        plt.plot(left_acc_file['time'], left_acc_file['x'], 'c')
-        plt.title('left-right x')
-        for jump in matched_jumps:
-            plt.plot(jump["jump_time"], 0, 'ro')
-        for jump in jumps:
-            plt.plot(jump["jump_time"], 1, 'go')
-        plt.show()
+        # plt.figure(figsize=(14, 7))
+        # plt.plot(right_acc_file['time'], right_acc_file['x'], 'b')
+        # plt.plot(left_acc_file['time'], left_acc_file['x'], 'c')
+        # plt.title('left-right x')
+        # for jump in matched_jumps:
+        #     plt.plot(jump["jump_time"], 0, 'ro')
+        # for jump in jumps:
+        #     plt.plot(jump["jump_time"], 1, 'go')
+        # plt.show()
 
         return matched_jumps
 
