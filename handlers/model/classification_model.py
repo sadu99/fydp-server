@@ -49,9 +49,18 @@ class ClassificationModel:
         classes = ["Jump", "Walk", "Run", "Noise"]
         sides = ["left", "right"]
         config.training_threshold_map = {
-            1: {"Jump": 0.50,  "Walk": 0.45, "Run": 0.7, "Noise": 0.4},
-            2: {"Jump": 0.55, "Walk": 0.5, "Run": 0.65, "Noise": 0.4},
-            3: {"Jump": 0.50, "Walk": 0.5, "Run": 0.7, "Noise": 0.4}
+            1: {
+                "left": {"Jump": 0.5,  "Walk": 0.35, "Run": 0.5, "Noise": 0.3},
+                "right": {"Jump": 0.5,  "Walk": 0.35, "Run": 0.6, "Noise": 0.3}
+            },
+            2: {
+                "left": {"Jump": 0.6, "Walk": 0.55, "Run": 0.65, "Noise": 0.3},
+                "right": {"Jump": 0.6, "Walk": 0.55, "Run": 0.4, "Noise": 0.3}
+            },
+            3: {
+                "left": {"Jump": 0.50, "Walk": 0.6, "Run": 0.55, "Noise": 0.3},
+                "right": {"Jump": 0.50, "Walk": 0.6, "Run": 0.6, "Noise": 0.3}
+            }
             # 4: {"Jump": 0.55, "Walk": 0.8, "Run": 0.7, "Load": 0.51, "Noise": 0.5}
         }
         data = []
@@ -89,7 +98,7 @@ class ClassificationModel:
 
                     # Get peaks based on x-axis
 
-                    spikes_x = acc_x_ts.get_negative_spikes(config.training_threshold_map[file_idx][classes[i]])
+                    spikes_x = acc_x_ts.get_negative_spikes(config.training_threshold_map[file_idx][side][classes[i]])
                     print acc_path, len(spikes_x)
                     for spike in spikes_x:
                         max_y_value = max(acc_y_ts.data_axis[spike["start_index"]: spike["end_index"]])

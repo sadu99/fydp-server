@@ -57,7 +57,7 @@ data = {
 }
 
 # Read CSV File
-x_threshold = 0.7
+x_threshold = 0.6
 file_idx = '2'
 activity = 'Jump'
 path_left = "../supervised_data/%s/%s_acc_left.csv" % (activity, file_idx)
@@ -70,7 +70,7 @@ acc_x_raw = df[['time', 'x']]
 acc_x_ts = TimeSeries(acc_x_raw['time'], acc_x_raw['x'])
 
 # # Extract Spikes
-spikes_x = acc_x_ts.get_spikes(x_threshold)
+spikes_x = acc_x_ts.get_negative_spikes(x_threshold)
 
 # Build x Graph
 plt.figure(figsize=(14, 7))
