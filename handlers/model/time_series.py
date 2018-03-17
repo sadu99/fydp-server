@@ -33,11 +33,11 @@ class TimeSeries:
                 right_variance > variance_threshold:
             right_variance = np.var(data_arr[current_idx: current_idx + step_size])
             current_idx += 1
-        if current_idx > len(data_arr) - step_size:
+        if current_idx > len(data_arr) - step_size - 1:
             end_index = len(data_arr) - 1
             right_stable = False
         elif current_idx - index + step_size < self.spike_max_radius:
-            end_index = index + self.spike_max_radius - 1
+            end_index = index + self.spike_max_radius - 1 if index + self.spike_max_radius < len(data_arr) else len(data_arr) - 1
             right_stable = False
         elif current_idx <= len(data_arr) - step_size:
             end_index = current_idx + step_size - 1

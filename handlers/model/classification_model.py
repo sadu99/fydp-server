@@ -48,10 +48,20 @@ class ClassificationModel:
     def train_model(self):
         DATA_PATH = os.path.join(config.ROOT_DIR, 'supervised_data')
         classes = ["Jump", "Walk", "Run", "Noise"]
+        sides = ["left", "right"]
         config.training_threshold_map = {
-            1: {"Jump": 0.50,  "Walk": 0.45, "Run": 0.7, "Noise": 0.4},
-            2: {"Jump": 0.55, "Walk": 0.5, "Run": 0.65, "Noise": 0.4},
-            3: {"Jump": 0.50, "Walk": 0.5, "Run": 0.7, "Noise": 0.4}
+            1: {
+                "left": {"Jump": 0.5,  "Walk": 0.35, "Run": 0.5, "Noise": 0.3},
+                "right": {"Jump": 0.5,  "Walk": 0.35, "Run": 0.6, "Noise": 0.3}
+            },
+            2: {
+                "left": {"Jump": 0.6, "Walk": 0.55, "Run": 0.65, "Noise": 0.3},
+                "right": {"Jump": 0.6, "Walk": 0.55, "Run": 0.4, "Noise": 0.3}
+            },
+            3: {
+                "left": {"Jump": 0.50, "Walk": 0.6, "Run": 0.55, "Noise": 0.3},
+                "right": {"Jump": 0.50, "Walk": 0.6, "Run": 0.6, "Noise": 0.3}
+            }
             # 4: {"Jump": 0.55, "Walk": 0.8, "Run": 0.7, "Load": 0.51, "Noise": 0.5}
         }
         data = []
@@ -60,78 +70,83 @@ class ClassificationModel:
         for i in range(len(classes)):
             files_ended = False
             file_idx = 0
-            left_or_right = "left"
 
             while not files_ended:
-                # Read CSV File
                 file_idx += 1
-                acc_path = "%s/%s/%s_acc_%s.csv" % (DATA_PATH, classes[i], file_idx, left_or_right)
-                euler_path = "%s/%s/%s_euler_%s.csv" % (DATA_PATH, classes[i], file_idx, left_or_right)
-                if not os.path.exists(acc_path) or not os.path.exists(euler_path):
-                    files_ended = True
-                    continue
-                acc_file = pd.read_csv("%s/%s/%s_acc_%s.csv" % (DATA_PATH, classes[i], file_idx, left_or_right))
-                euler_file = pd.read_csv("%s/%s/%s_euler_%s.csv" % (DATA_PATH, classes[i], file_idx, left_or_right))
-                left_or_right = "right" if left_or_right == "left" else "left"
 
-                # Build TimeSeries Objects
-                acc_x_ts = TimeSeries(acc_file['time'], acc_file['x'])
-                acc_y_ts = TimeSeries(acc_file['time'], acc_file['y'])
-                acc_z_ts = TimeSeries(acc_file['time'], acc_file['z'])
-                pitch = np.array(euler_file['pitch'])
-                roll = np.array(euler_file['roll'])
-                yaw = np.array(euler_file['yaw'])
-                acc_times = np.array(acc_file['time'])
-                euler_times = np.array(euler_file['time'])
-                self.mod_euler_angles(pitch, roll, yaw)
+                for side in sides:
 
-                # Get peaks based on x-axis
-                spikes_x = acc_x_ts.get_negative_spikes(config.training_threshold_map[file_idx][classes[i]])
-                for spike in spikes_x:
-                    max_y_value = max(acc_y_ts.data_axis[spike["start_index"]: spike["end_index"]])
-                    min_y_value = min(acc_y_ts.data_axis[spike["start_index"]: spike["end_index"]])
+                    # Read CSV File
+                    DATA_PATH = os.path.join(config.ROOT_DIR, 'supervised_data')
+                    acc_path = "%s/%s/%s_acc_%s.csv" % (DATA_PATH, classes[i], file_idx, side)
+                    euler_path = "%s/%s/%s_euler_%s.csv" % (DATA_PATH, classes[i], file_idx, side)
+                    if not os.path.exists(acc_path) or not os.path.exists(euler_path):
+                        files_ended = True
+                        continue
+                    acc_file = pd.read_csv("%s/%s/%s_acc_%s.csv" % (DATA_PATH, classes[i], file_idx, side))
+                    euler_file = pd.read_csv("%s/%s/%s_euler_%s.csv" % (DATA_PATH, classes[i], file_idx, side))
 
-                    max_z_value = max(acc_z_ts.data_axis[spike["start_index"]: spike["end_index"]])
-                    min_z_value = min(acc_z_ts.data_axis[spike["start_index"]: spike["end_index"]])
+                    # Build TimeSeries Objects
+                    acc_x_ts = TimeSeries(acc_file['time'], acc_file['x'])
+                    acc_y_ts = TimeSeries(acc_file['time'], acc_file['y'])
+                    acc_z_ts = TimeSeries(acc_file['time'], acc_file['z'])
+                    pitch = np.array(euler_file['pitch'])
+                    roll = np.array(euler_file['roll'])
+                    yaw = np.array(euler_file['yaw'])
+                    acc_times = np.array(acc_file['time'])
+                    euler_times = np.array(euler_file['time'])
+                    self.mod_euler_angles(pitch, roll, yaw)
 
-                    euler_start_idx, euler_end_idx = self.find_euler_time(spike, acc_times, euler_times)
-                    spike_pitch = pitch[euler_start_idx:euler_end_idx]
-                    spike_roll = roll[euler_start_idx:euler_end_idx]
-                    spike_yaw = yaw[euler_start_idx:euler_end_idx]
-                    min_pitch = min(spike_pitch)
-                    min_roll = min(spike_roll)
-                    min_yaw = min(spike_yaw)
-                    max_pitch = max(spike_pitch)
-                    max_roll = max(spike_roll)
-                    max_yaw = max(spike_yaw)
-                    pitch_var = np.var(spike_pitch)
-                    roll_var = np.var(spike_roll)
-                    yaw_var = np.var(spike_yaw)
+                    # Get peaks based on x-axis
 
-                    data.append([
-                        spike["max_value"],
-                        spike["min_value"],
-                        # spike["max_value"] - spike["min_value"],
-                        # max_y_value,
-                        # min_y_value,
-                        # max_y_value - min_y_value,
-                        max_z_value,
-                        # min_z_value,
-                        # max_z_value - min_z_value,
-                        spike["variance"],
-                        # min_pitch,
-                        # min_roll,
-                        # min_yaw,
-                        max_pitch - min_pitch,
-                        max_roll,
-                        # max_yaw,
-                        # pitch_var,
-                        # roll_var
-                    ])
-                    targets.append(i)
+                    spikes_x = acc_x_ts.get_negative_spikes(config.training_threshold_map[file_idx][side][classes[i]])
+                    print acc_path, len(spikes_x)
+                    for spike in spikes_x:
+                        max_y_value = max(acc_y_ts.data_axis[spike["start_index"]: spike["end_index"]])
+                        min_y_value = min(acc_y_ts.data_axis[spike["start_index"]: spike["end_index"]])
+
+                        max_z_value = max(acc_z_ts.data_axis[spike["start_index"]: spike["end_index"]])
+                        min_z_value = min(acc_z_ts.data_axis[spike["start_index"]: spike["end_index"]])
+
+                        euler_start_idx, euler_end_idx = self.find_euler_time(spike, acc_times, euler_times)
+                        spike_pitch = pitch[euler_start_idx:euler_end_idx]
+                        spike_roll = roll[euler_start_idx:euler_end_idx]
+                        spike_yaw = yaw[euler_start_idx:euler_end_idx]
+                        min_pitch = min(spike_pitch)
+                        min_roll = min(spike_roll)
+                        min_yaw = min(spike_yaw)
+                        max_pitch = max(spike_pitch)
+                        max_roll = max(spike_roll)
+                        max_yaw = max(spike_yaw)
+                        pitch_var = np.var(spike_pitch)
+                        roll_var = np.var(spike_roll)
+                        yaw_var = np.var(spike_yaw)
+
+                        data.append([
+                            spike["max_value"],
+                            spike["min_value"],
+                            # spike["max_value"] - spike["min_value"],
+                            # max_y_value,
+                            # min_y_value,
+                            # max_y_value - min_y_value,
+                            max_z_value,
+                            # min_z_value,
+                            # max_z_value - min_z_value,
+                            spike["variance"],
+                            # min_pitch,
+                            # min_roll,
+                            # min_yaw,
+                            max_pitch - min_pitch,
+                            max_roll,
+                            # max_yaw,
+                            # pitch_var,
+                            # roll_var
+                        ])
+                        targets.append(i)
 
         # Create and fit a nearest-neighbor classifier
         self.model.fit(np.asarray(data), np.asarray(targets))
+        self.process_file('2')
 
     def test_classifier(self, file_name):
         home = os.path.expanduser("~")
@@ -215,7 +230,7 @@ class ClassificationModel:
         euler_end_idx = current_idx
         return euler_start_idx, euler_end_idx
 
-    def get_abduction_angles(self, file_name):
+    def process_file(self, file_name):
         home = os.path.expanduser("~")
         jumps = []
         matched_jumps = []
@@ -320,7 +335,7 @@ class ClassificationModel:
             match_found = False
             idx = 0
             while idx < len(jumps) and not match_found:
-                if abs(jump["jump_time"] - jumps[idx]["jump_time"]) < 400 and not jump["jump_time"] == jumps[idx]["jump_time"]:
+                if abs(jump["jump_time"] - jumps[idx]["jump_time"]) < 500 and not jump["jump_time"] == jumps[idx]["jump_time"]:
                     match_found = True
                     matched_jumps.append(jump)
 
@@ -332,15 +347,16 @@ class ClassificationModel:
                              pitch_ts.data_axis[euler_start_idx:euler_end_idx], '--r')
                 idx += 1
 
-        # plt.figure(figsize=(14, 7))
-        # plt.plot(right_acc_file['time'], right_acc_file['x'], 'b')
-        # plt.plot(left_acc_file['time'], left_acc_file['x'], 'c')
-        # plt.title('left-right x')
-        # for jump in matched_jumps:
-        #     plt.plot(jump["jump_time"], 0, 'ro')
-        # for jump in jumps:
-        #     plt.plot(jump["jump_time"], 1, 'go')
-        # plt.show()
+        plt.figure(figsize=(14, 7))
+        plt.plot(right_acc_file['time'], right_acc_file['x'], 'b')
+        plt.plot(left_acc_file['time'], left_acc_file['x'], 'c')
+        plt.title('left-right x')
+        for jump in matched_jumps:
+            plt.plot(jump["jump_time"], 0, 'ro')
+        for jump in jumps:
+            plt.plot(jump["jump_time"], 1, 'go')
+        plt.show()
 
         return matched_jumps
 
+model = ClassificationModel()

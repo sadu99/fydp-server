@@ -4,8 +4,8 @@ from flask import Flask, jsonify
 
 import config
 from handlers import users, activities, APIError, health, history
+from handlers.model.classification_model import model
 from models import db
-from handlers.model.classification_model import ClassificationModel
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = config.get_db_conn_str()
@@ -14,6 +14,9 @@ app.debug = True
 
 # Initialize DB
 db.init_app(app)
+
+# Initialize Model
+model.train_model()
 
 # Initialize Routes
 
@@ -40,9 +43,6 @@ def handle_api_error(error):
     response.status_code = error.status_code
     return response
 
-# Initialize model data
-model = ClassificationModel()
-model.train_model()
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', threaded=True)
