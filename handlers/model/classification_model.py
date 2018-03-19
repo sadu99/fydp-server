@@ -14,13 +14,13 @@ class ClassificationModel:
     def mod_euler_angles(self, pitch, roll, yaw):
         pitch_offset = pitch[0]
         roll_offset = roll[0]
-        yaw_offset = yaw[0]
+        # yaw_offset = yaw[0]
 
         for i in range(len(pitch)):
             # offset the angles to center at 0 degrees
             pitch[i] = pitch[i] - pitch_offset
             roll[i] = roll[i] - roll_offset
-            yaw[i] = yaw[i] - yaw_offset
+            # yaw[i] = yaw[i] - yaw_offset
 
             # mod the angles to eliminate discontinuities
             # Don't need yaw for now, mod if needed
@@ -36,12 +36,15 @@ class ClassificationModel:
                 if roll[i] > 90:
                     roll[i] = roll[i] - 180
 
+            while yaw[i] > 180:
+                    yaw[i] = yaw[i] - 360
+
     def get_severity(self, angle):
         if angle <= 6.0:
             return 0.25
         if angle <= 10.0:
             return 0.50
-        if angle <= 15.0:
+        if angle <= 14.0:
             return 0.75
         return 1.0
 
@@ -98,9 +101,7 @@ class ClassificationModel:
                     self.mod_euler_angles(pitch, roll, yaw)
 
                     # Get peaks based on x-axis
-
                     spikes_x = acc_x_ts.get_negative_spikes(config.training_threshold_map[file_idx][side][classes[i]])
-                    print acc_path, len(spikes_x)
                     for spike in spikes_x:
                         max_y_value = max(acc_y_ts.data_axis[spike["start_index"]: spike["end_index"]])
                         min_y_value = min(acc_y_ts.data_axis[spike["start_index"]: spike["end_index"]])
@@ -146,7 +147,6 @@ class ClassificationModel:
 
         # Create and fit a nearest-neighbor classifier
         self.model.fit(np.asarray(data), np.asarray(targets))
-        self.process_file('2')
 
     def test_classifier(self, file_name):
         home = os.path.expanduser("~")
@@ -238,12 +238,14 @@ class ClassificationModel:
 
         left_acc_file = pd.read_csv("%s/data/%s_acc_left.csv" % (home, file_name))
         right_acc_file = pd.read_csv("%s/data/%s_acc_right.csv" % (home, file_name))
+        left_euler_file = pd.read_csv("%s/data/%s_euler_left.csv" % (home, file_name))
+        right_euler_file = pd.read_csv("%s/data/%s_euler_right.csv" % (home, file_name))
         left_spikes = (TimeSeries(left_acc_file['time'], left_acc_file['x'])).get_negative_spikes(config.TEST_THRESHOLD)
         right_spikes = (TimeSeries(right_acc_file['time'], right_acc_file['x'])).get_negative_spikes(config.TEST_THRESHOLD)
 
         for side in sides:
-            acc_file = pd.read_csv("%s/data/%s_acc_%s.csv" % (home, file_name, side))
-            euler_file = pd.read_csv("%s/data/%s_euler_%s.csv" % (home, file_name, side))
+            acc_file = left_acc_file if side == "left" else right_acc_file
+            euler_file = left_euler_file if side == "left" else right_euler_file
             data_test = []
 
             # Build TimeSeries Objects
@@ -315,11 +317,11 @@ class ClassificationModel:
                 # process a jump
                 if prediction == 0:
                     euler_start_idx, euler_end_idx = self.find_euler_time(spikes[idx], acc_times, euler_times)
-                    euler_start_angle = pitch[euler_start_idx]
-                    euler_end_angle = pitch[euler_end_idx]
-                    peak_angle = max(pitch[euler_start_idx:euler_end_idx]) if side == 'right' else min(pitch[euler_start_idx:euler_end_idx])
+                    euler_start_angle = yaw[euler_start_idx]
+                    euler_end_angle = yaw[euler_end_idx]
+                    peak_angle = max(yaw[euler_start_idx:euler_end_idx]) if side == 'right' else min(yaw[euler_start_idx:euler_end_idx])
                     reference_angle = euler_end_angle if not spikes[idx]["left_stable"] and spikes[idx]["right_stable"] else euler_start_angle
-                    abduction_angle = abs(peak_angle - reference_angle)
+                    abduction_angle = abs(peak_angle - reference_angle) * config.ANGLE_CONSTANT
 
                     jump = {
                         "abduction_angle": abduction_angle,
@@ -327,35 +329,61 @@ class ClassificationModel:
                         "severity": self.get_severity(abduction_angle),
                         "jump_start_index": euler_start_idx,
                         "jump_end_index": euler_end_idx,
-                        "leg": side
+                        "leg": side,
                     }
                     jumps.append(jump)
 
-        for jump in jumps:
-            match_found = False
-            idx = 0
-            while idx < len(jumps) and not match_found:
-                if abs(jump["jump_time"] - jumps[idx]["jump_time"]) < 500 and not jump["jump_time"] == jumps[idx]["jump_time"]:
-                    match_found = True
-                    matched_jumps.append(jump)
+        jump_matches = [None]*len(jumps)
+        for j, jump in enumerate(jumps):
+            i = 0
+            this_jump_time = jump["jump_time"]
 
-                    euler_start_idx = jump["jump_start_index"]
-                    euler_end_idx = jump["jump_end_index"]
-                    plt.plot(jump["jump_time"], peak_angle, 'ro')
-                    plt.plot(jump["jump_time"], reference_angle, 'go')
-                    plt.plot(pitch_ts.time_axis[euler_start_idx:euler_end_idx],
-                             pitch_ts.data_axis[euler_start_idx:euler_end_idx], '--r')
-                idx += 1
+            while i < len(jumps):
+                other_jump_time = jumps[i]["jump_time"]
+                jump_time_diff = abs(this_jump_time - other_jump_time)
 
-        plt.figure(figsize=(14, 7))
-        plt.plot(right_acc_file['time'], right_acc_file['x'], 'b')
-        plt.plot(left_acc_file['time'], left_acc_file['x'], 'c')
-        plt.title('left-right x')
-        for jump in matched_jumps:
-            plt.plot(jump["jump_time"], 0, 'ro')
-        for jump in jumps:
-            plt.plot(jump["jump_time"], 1, 'go')
-        plt.show()
+                # test if jump i potentially be paired with jump j
+                if jump_time_diff < 500 and not jump["leg"] == jumps[i]["leg"] and not jump_time_diff == 0:
+                    is_this_good_match = jump_matches[j] == None or jump_time_diff < abs(jumps[jump_matches[j]]["jump_time"] - this_jump_time)
+                    is_other_good_match = jump_matches[i] == None or jump_time_diff < abs(jumps[jump_matches[i]]["jump_time"] - other_jump_time)
+                    if is_this_good_match and is_other_good_match:
+                        if jump_matches[i]:
+                            jump_matches[jump_matches[i]] = None
+                        jump_matches[i] = j
+                        jump_matches[j] = i
+                i += 1
+
+        for idx, match in enumerate(jump_matches):
+            if not match == None:
+                matched_jumps.append(jumps[idx])
+
+        # plt.figure(figsize=(14, 7))
+        # plt.plot(right_acc_file['time'], right_acc_file['x'], 'b')
+        # plt.plot(left_acc_file['time'], left_acc_file['x'], 'c')
+        # plt.title('left-right x')
+        # for jump in matched_jumps:
+        #     if jump["leg"] == 'left':
+        #         plt.plot(jump["jump_time"], 0, 'co')
+        #     else:
+        #         plt.plot(jump["jump_time"], 0, 'bo')
+        #     print "%s: %s" % (jump["leg"], jump["abduction_angle"])
+        # for jump in jumps:
+        #     if jump["leg"] == 'left':
+        #         plt.plot(jump["jump_time"], 1, 'go')
+        #     else:
+        #         plt.plot(jump["jump_time"], 1, 'yo')
+        #
+        # plt.figure(figsize=(14, 7))
+        # plt.plot(right_euler_file['time'], right_euler_file['yaw'], 'b')
+        # plt.plot(left_euler_file['time'], left_euler_file['yaw'], 'c')
+        # plt.title("yaw, left=cyan, right=blue")
+        # for jump in matched_jumps:
+        #     if jump["leg"] == 'left':
+        #         plt.plot(jump["jump_time"], 310, 'co')
+        #     else:
+        #         plt.plot(jump["jump_time"], 310, 'bo')
+        #
+        # plt.show()
 
         return matched_jumps
 
