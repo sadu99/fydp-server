@@ -144,7 +144,7 @@ def get_activities(user_id):
         } for activity in _get_activities_for_user(user)
     ]
 
-    sorted_activities = sorted(activities, key=itemgetter('started_at'))
+    sorted_activities = sorted(activities, key=itemgetter('started_at'), reverse=True)
     return json.dumps({"activities": sorted_activities}), 200
 
 
