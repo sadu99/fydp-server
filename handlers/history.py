@@ -16,7 +16,6 @@ def get_historical_jumps(user_id):
         raise APIError("start_date and end_date are required query parameters", 400)
 
     response = {}
-    data = {"count": 0, "severity": 0, "abduction_angle": 0, "rpe": 0}
 
     for jump in _get_jumps_for_user_with_id(user_id, start_date, end_date):
 
@@ -24,14 +23,10 @@ def get_historical_jumps(user_id):
         if not response.get(jump_date):
             response[jump_date] = {}
 
-        new_data = data
-        new_data["count"] = jump[2]
-        new_data["severity"] = jump[3],
-        new_data["abduction_angle"] = jump[4],
-        new_data["rpe"] = jump[5]
+        data = {"count": jump[2], "severity": jump[3], "abduction_angle": jump[4], "rpe": jump[5]}
 
         if not response[jump_date].get(jump[1]):
-            response[jump_date][jump[1]] = new_data
+            response[jump_date][jump[1]] = data
 
     # jumps = [
     #     {"date": jump[0],

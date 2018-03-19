@@ -154,19 +154,16 @@ def get_activity_jumps(user_id, activity_id):
         raise APIError("invalid activity", 400)
 
     response = {}
-    data = {"severity": 0, "abduction_angle": 0}
 
     for jump in _get_jumps_for_activity(activity):
 
         if not response.get(jump.jump_time):
             response[jump.jump_time] = {}
 
-        new_data = data
-        new_data["severity"] = str(jump.severity),
-        new_data["abduction_angle"] = str(jump.abduction_angle),
+        data = {"severity": str(jump.severity), "abduction_angle": str(jump.abduction_angle)}
 
         if not response[jump.jump_time].get(jump.leg):
-            response[jump.jump_time][jump.leg] = new_data
+            response[jump.jump_time][jump.leg] = data
 
     # jumps = [
     #     {
