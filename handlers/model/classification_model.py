@@ -64,7 +64,7 @@ class ClassificationModel:
             3: {
                 "left": {"Jump": 0.50, "Walk": 0.6, "Run": 0.55, "Noise": 0.3},
                 "right": {"Jump": 0.50, "Walk": 0.6, "Run": 0.6, "Noise": 0.3}
-            }
+            },
             # 4: {"Jump": 0.55, "Walk": 0.8, "Run": 0.7, "Load": 0.51, "Noise": 0.5}
         }
         data = []
@@ -147,6 +147,9 @@ class ClassificationModel:
 
         # Create and fit a nearest-neighbor classifier
         self.model.fit(np.asarray(data), np.asarray(targets))
+        # self.test_classifier('devices')
+        # self.process_file('devices')
+
 
     def test_classifier(self, file_name):
         home = os.path.expanduser("~")
@@ -356,7 +359,7 @@ class ClassificationModel:
         for idx, match in enumerate(jump_matches):
             if not match == None:
                 matched_jumps.append(jumps[idx])
-
+        #
         # plt.figure(figsize=(14, 7))
         # plt.plot(right_acc_file['time'], right_acc_file['x'], 'b')
         # plt.plot(left_acc_file['time'], left_acc_file['x'], 'c')
@@ -383,7 +386,6 @@ class ClassificationModel:
         #     else:
         #         plt.plot(jump["jump_time"], 310, 'bo')
         #
-
         # plt.show()
 
         return matched_jumps

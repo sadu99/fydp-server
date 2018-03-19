@@ -1,7 +1,7 @@
 import os
 
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
-TEST_THRESHOLD = 0.4
+TEST_THRESHOLD = 0.3
 ANGLE_CONSTANT = 0.4
 
 
