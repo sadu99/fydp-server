@@ -147,13 +147,14 @@ class ClassificationModel:
 
         # Create and fit a nearest-neighbor classifier
         self.model.fit(np.asarray(data), np.asarray(targets))
-        # self.test_classifier('devices')
-        # self.process_file('devices')
+        # self.test_classifier('1521484694744')
+        # self.process_file('1521484694744')
 
 
     def test_classifier(self, file_name):
         home = os.path.expanduser("~")
-        sides = ["left", "right"]
+        # sides = ["left", "right"]
+        sides = ["left"]
 
         for side in sides:
             acc_file = pd.read_csv("%s/data/%s_acc_%s.csv" % (home, file_name, side))
@@ -237,18 +238,20 @@ class ClassificationModel:
         home = os.path.expanduser("~")
         jumps = []
         matched_jumps = []
-        sides = ["left", "right"]
+        sides = ["left"]
 
         left_acc_file = pd.read_csv("%s/data/%s_acc_left.csv" % (home, file_name))
-        right_acc_file = pd.read_csv("%s/data/%s_acc_right.csv" % (home, file_name))
+        # right_acc_file = pd.read_csv("%s/data/%s_acc_right.csv" % (home, file_name))
         left_euler_file = pd.read_csv("%s/data/%s_euler_left.csv" % (home, file_name))
-        right_euler_file = pd.read_csv("%s/data/%s_euler_right.csv" % (home, file_name))
+        # right_euler_file = pd.read_csv("%s/data/%s_euler_right.csv" % (home, file_name))
         left_spikes = (TimeSeries(left_acc_file['time'], left_acc_file['x'])).get_negative_spikes(config.TEST_THRESHOLD)
-        right_spikes = (TimeSeries(right_acc_file['time'], right_acc_file['x'])).get_negative_spikes(config.TEST_THRESHOLD)
+        # right_spikes = (TimeSeries(right_acc_file['time'], right_acc_file['x'])).get_negative_spikes(config.TEST_THRESHOLD)
 
         for side in sides:
-            acc_file = left_acc_file if side == "left" else right_acc_file
-            euler_file = left_euler_file if side == "left" else right_euler_file
+            # acc_file = left_acc_file if side == "left" else right_acc_file
+            # euler_file = left_euler_file if side == "left" else right_euler_file
+            acc_file = left_acc_file
+            euler_file = left_euler_file
             data_test = []
 
             # Build TimeSeries Objects
@@ -267,7 +270,8 @@ class ClassificationModel:
             euler_times = np.array(euler_file['time'])
 
             # Extract Spikes
-            spikes = left_spikes if side == 'left' else right_spikes
+            spikes = left_spikes
+            # spikes = left_spikes if side == 'left' else right_spikes
             for spike in spikes:
                 max_y_value = max(acc_y_ts.data_axis[spike["start_index"]: spike["end_index"]])
                 min_y_value = min(acc_y_ts.data_axis[spike["start_index"]: spike["end_index"]])
@@ -336,29 +340,29 @@ class ClassificationModel:
                     }
                     jumps.append(jump)
 
-        jump_matches = [None]*len(jumps)
-        for j, jump in enumerate(jumps):
-            i = 0
-            this_jump_time = jump["jump_time"]
-
-            while i < len(jumps):
-                other_jump_time = jumps[i]["jump_time"]
-                jump_time_diff = abs(this_jump_time - other_jump_time)
-
-                # test if jump i potentially be paired with jump j
-                if jump_time_diff < 500 and not jump["leg"] == jumps[i]["leg"] and not jump_time_diff == 0:
-                    is_this_good_match = jump_matches[j] == None or jump_time_diff < abs(jumps[jump_matches[j]]["jump_time"] - this_jump_time)
-                    is_other_good_match = jump_matches[i] == None or jump_time_diff < abs(jumps[jump_matches[i]]["jump_time"] - other_jump_time)
-                    if is_this_good_match and is_other_good_match:
-                        if jump_matches[i]:
-                            jump_matches[jump_matches[i]] = None
-                        jump_matches[i] = j
-                        jump_matches[j] = i
-                i += 1
-
-        for idx, match in enumerate(jump_matches):
-            if not match == None:
-                matched_jumps.append(jumps[idx])
+        # jump_matches = [None]*len(jumps)
+        # for j, jump in enumerate(jumps):
+        #     i = 0
+        #     this_jump_time = jump["jump_time"]
+        #
+        #     while i < len(jumps):
+        #         other_jump_time = jumps[i]["jump_time"]
+        #         jump_time_diff = abs(this_jump_time - other_jump_time)
+        #
+        #         # test if jump i potentially be paired with jump j
+        #         if jump_time_diff < 500 and not jump["leg"] == jumps[i]["leg"] and not jump_time_diff == 0:
+        #             is_this_good_match = jump_matches[j] == None or jump_time_diff < abs(jumps[jump_matches[j]]["jump_time"] - this_jump_time)
+        #             is_other_good_match = jump_matches[i] == None or jump_time_diff < abs(jumps[jump_matches[i]]["jump_time"] - other_jump_time)
+        #             if is_this_good_match and is_other_good_match:
+        #                 if jump_matches[i]:
+        #                     jump_matches[jump_matches[i]] = None
+        #                 jump_matches[i] = j
+        #                 jump_matches[j] = i
+        #         i += 1
+        #
+        # for idx, match in enumerate(jump_matches):
+        #     if not match == None:
+        #         matched_jumps.append(jumps[idx])
         #
         # plt.figure(figsize=(14, 7))
         # plt.plot(right_acc_file['time'], right_acc_file['x'], 'b')
@@ -387,7 +391,8 @@ class ClassificationModel:
         #         plt.plot(jump["jump_time"], 310, 'bo')
         #
         # plt.show()
-
-        return matched_jumps
+        #
+        # return matched_jumps
+        return jumps
 
 model = ClassificationModel()
