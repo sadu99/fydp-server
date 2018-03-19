@@ -228,7 +228,7 @@ class ClassificationModel:
         while euler_times[current_idx] < start_time:
             current_idx += 1
         euler_start_idx = current_idx
-        while euler_times[current_idx + 1] < end_time:
+        while current_idx + 1 < len(euler_times) and euler_times[current_idx + 1] < end_time:
             current_idx += 1
         euler_end_idx = current_idx
         return euler_start_idx, euler_end_idx
