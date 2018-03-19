@@ -9,6 +9,8 @@ from handlers import APIError, _get_user
 from handlers.model.classification_model import model
 from models import db, Activity, File, Jump
 
+from operator import itemgetter
+
 
 def create_activity(user_id):
     user = _get_user(user_id)
@@ -141,7 +143,9 @@ def get_activities(user_id):
             "updated_at": activity.updated_at
         } for activity in _get_activities_for_user(user)
     ]
-    return json.dumps({"activities": activities}), 200
+
+    sorted_activities = sorted(activities, key=itemgetter('started_at'))
+    return json.dumps({"activities": sorted_activities}), 200
 
 
 def get_activity_jumps(user_id, activity_id):
@@ -149,18 +153,35 @@ def get_activity_jumps(user_id, activity_id):
     if not activity:
         raise APIError("invalid activity", 400)
 
-    jumps = [
-        {
-            "jump_id": jump.id,
-            "activity_id": jump.activity_id,
-            "jump_time": jump.jump_time,
-            "user_id": jump.user_id,
-            "abduction_angle": str(jump.abduction_angle),
-            "created_at": jump.created_at,
-            "updated_at": jump.updated_at
-        } for jump in _get_jumps_for_activity(activity)
-    ]
-    return json.dumps({"jumps": jumps}), 200
+    response = {}
+    data = {"severity": 0, "abduction_angle": 0}
+
+    for jump in _get_jumps_for_activity(activity):
+
+        if not response.get(jump.jump_time):
+            response[jump.jump_time] = {}
+
+        new_data = data
+        new_data["severity"] = str(jump.severity),
+        new_data["abduction_angle"] = str(jump.abduction_angle),
+
+        if not response[jump.jump_time].get(jump.leg):
+            response[jump.jump_time][jump.leg] = new_data
+
+    # jumps = [
+    #     {
+    #         "jump_id": jump.id,
+    #         "activity_id": jump.activity_id,
+    #         "jump_time": jump.jump_time,
+    #         "user_id": jump.user_id,
+    #         "severity": jump.severity,
+    #         "abduction_angle": str(jump.abduction_angle),
+    #         "created_at": jump.created_at,
+    #         "updated_at": jump.updated_at
+    #     } for jump in _get_jumps_for_activity(activity)
+    # ]
+
+    return json.dumps(response), 200
 
 
 def _get_jumps_for_activity(activity):
