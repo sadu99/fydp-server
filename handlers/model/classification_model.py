@@ -239,7 +239,8 @@ class ClassificationModel:
         jumps = []
         matched_jumps = []
         sides = ["left", "right"]
-        predictions = []
+        left_predictions = []
+        right_predictions = []
 
         left_acc_file = pd.read_csv("%s/data/%s_acc_left.csv" % (home, file_name))
         right_acc_file = pd.read_csv("%s/data/%s_acc_right.csv" % (home, file_name))
@@ -369,28 +370,22 @@ class ClassificationModel:
         plt.plot(right_acc_file['time'], right_acc_file['x'], 'b')
         plt.plot(left_acc_file['time'], left_acc_file['x'], 'c')
         plt.title('left-right x')
-        # for jump in matched_jumps:
-        #     if jump["leg"] == 'left':
-        #         plt.plot(jump["jump_time"], 0, 'co')
-        #     else:
-        #         plt.plot(jump["jump_time"], 0, 'bo')
-        #     print "%s: %s" % (jump["leg"], jump["abduction_angle"])
-        # for jump in jumps:
-        #     if jump["leg"] == 'left':
-        #         plt.plot(jump["jump_time"], 1, 'go')
-        #     else:
-        #         plt.plot(jump["jump_time"], 1, 'yo')
-
+        for jump in matched_jumps:
+            if jump["leg"] == 'left':
+                plt.plot(jump["jump_time"], 0, 'ro')
+            else:
+                plt.plot(jump["jump_time"], 0, 'mo')
+            print "%s: %s" % (jump["leg"], jump["abduction_angle"])
         for idx, spike in enumerate(left_spikes):
-            if predictions[idx] == 0:
+            if left_predictions[idx] == 0:
                 plt.plot(spike["time"], 1, 'go')
             else:
-                plt.plot(spike["time"], 1, 'ro')
+                plt.plot(spike["time"], 1, 'ko')
         for idx, spike in enumerate(right_spikes):
-            if predictions[idx] == 0:
+            if right_predictions[idx] == 0:
                 plt.plot(spike["time"], 1, 'yo')
             else:
-                plt.plot(spike["time"], 1, 'ro')
+                plt.plot(spike["time"], 1, 'ko')
 
         # plt.figure(figsize=(14, 7))
         # plt.plot(right_euler_file['time'], right_euler_file['yaw'], 'b')
