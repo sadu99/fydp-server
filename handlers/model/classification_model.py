@@ -352,7 +352,7 @@ class ClassificationModel:
                 jump_time_diff = abs(this_jump_time - other_jump_time)
 
                 # test if jump i potentially be paired with jump j
-                if jump_time_diff < 800 and not jump["leg"] == jumps[i]["leg"] and not jump_time_diff == 0:
+                if jump_time_diff < 500 and not jump["leg"] == jumps[i]["leg"] and not jump_time_diff == 0:
                     is_this_good_match = jump_matches[j] == None or jump_time_diff < abs(jumps[jump_matches[j]]["jump_time"] - this_jump_time)
                     is_other_good_match = jump_matches[i] == None or jump_time_diff < abs(jumps[jump_matches[i]]["jump_time"] - other_jump_time)
                     if is_this_good_match and is_other_good_match:
@@ -369,7 +369,7 @@ class ClassificationModel:
         plt.figure(figsize=(14, 7))
         plt.plot(right_acc_file['time'], right_acc_file['x'], 'b')
         plt.plot(left_acc_file['time'], left_acc_file['x'], 'c')
-        plt.title('Original Jump Classification')
+        plt.title('left-right x')
         for jump in matched_jumps:
             if jump["leg"] == 'left':
                 plt.plot(jump["jump_time"], 0, 'ro')
@@ -379,13 +379,13 @@ class ClassificationModel:
         for idx, spike in enumerate(left_spikes):
             if left_predictions[idx] == 0:
                 plt.plot(spike["time"], 1, 'go')
-            # else:
-            #     plt.plot(spike["time"], 1, 'ko')
+            else:
+                plt.plot(spike["time"], 1, 'ko')
         for idx, spike in enumerate(right_spikes):
             if right_predictions[idx] == 0:
                 plt.plot(spike["time"], 1, 'yo')
-            # else:
-            #     plt.plot(spike["time"], 1, 'ko')
+            else:
+                plt.plot(spike["time"], 1, 'ko')
 
         # plt.figure(figsize=(14, 7))
         # plt.plot(right_euler_file['time'], right_euler_file['yaw'], 'b')
