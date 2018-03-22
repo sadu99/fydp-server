@@ -147,8 +147,8 @@ class ClassificationModel:
 
         # Create and fit a nearest-neighbor classifier
         self.model.fit(np.asarray(data), np.asarray(targets))
-        self.test_classifier('5')
-        self.process_file('5')
+        # self.test_classifier('5')
+        # self.process_file('5')
 
     def test_classifier(self, file_name):
         home = os.path.expanduser("~")
@@ -365,27 +365,27 @@ class ClassificationModel:
             if not match == None:
                 matched_jumps.append(jumps[idx])
 
-        plt.figure(figsize=(14, 7))
-        plt.plot(right_acc_file['time'], right_acc_file['x'], 'b')
-        plt.plot(left_acc_file['time'], left_acc_file['x'], 'c')
-        plt.title('left-right x')
-        for jump in matched_jumps:
-            if jump["leg"] == 'left':
-                plt.plot(jump["jump_time"], 0, 'ro')
-            else:
-                plt.plot(jump["jump_time"], 0, 'mo')
-            print "%s: %s" % (jump["leg"], jump["abduction_angle"])
-        for idx, spike in enumerate(left_spikes):
-            if left_predictions[idx] == 0:
-                plt.plot(spike["time"], 1, 'go')
-            else:
-                plt.plot(spike["time"], 1, 'ko')
-        for idx, spike in enumerate(right_spikes):
-            if right_predictions[idx] == 0:
-                plt.plot(spike["time"], 1, 'yo')
-            else:
-                plt.plot(spike["time"], 1, 'ko')
-
+        # plt.figure(figsize=(14, 7))
+        # plt.plot(right_acc_file['time'], right_acc_file['x'], 'b')
+        # plt.plot(left_acc_file['time'], left_acc_file['x'], 'c')
+        # plt.title('left-right x')
+        # for jump in matched_jumps:
+        #     if jump["leg"] == 'left':
+        #         plt.plot(jump["jump_time"], 0, 'ro')
+        #     else:
+        #         plt.plot(jump["jump_time"], 0, 'mo')
+        #     print "%s: %s" % (jump["leg"], jump["abduction_angle"])
+        # for idx, spike in enumerate(left_spikes):
+        #     if left_predictions[idx] == 0:
+        #         plt.plot(spike["time"], 1, 'go')
+        #     else:
+        #         plt.plot(spike["time"], 1, 'ko')
+        # for idx, spike in enumerate(right_spikes):
+        #     if right_predictions[idx] == 0:
+        #         plt.plot(spike["time"], 1, 'yo')
+        #     else:
+        #         plt.plot(spike["time"], 1, 'ko')
+        #
         # plt.figure(figsize=(14, 7))
         # plt.plot(right_euler_file['time'], right_euler_file['yaw'], 'b')
         # plt.plot(left_euler_file['time'], left_euler_file['yaw'], 'c')
@@ -396,9 +396,9 @@ class ClassificationModel:
         #     else:
         #         plt.plot(jump["jump_time"], 310, 'bo')
         #
-        plt.show()
+        # plt.show()
 
-        # return matched_jumps
-        return jumps
+        return matched_jumps
+        # return jumps
 
 model = ClassificationModel()
