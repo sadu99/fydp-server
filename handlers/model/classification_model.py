@@ -150,7 +150,6 @@ class ClassificationModel:
         self.test_classifier('5')
         self.process_file('5')
 
-
     def test_classifier(self, file_name):
         home = os.path.expanduser("~")
         sides = ["left", "right"]
