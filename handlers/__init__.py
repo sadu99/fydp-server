@@ -16,6 +16,15 @@ class APIError(Exception):
         return rv
 
 
+def _create_user(user):
+    try:
+        db.session.add(user)
+        db.session.commit()
+    except Exception:
+        traceback.print_exc()
+        raise APIError("failed to create new user", 500)
+
+
 def _get_user(user_id):
     try:
         user = db.session.query(User).get(user_id)

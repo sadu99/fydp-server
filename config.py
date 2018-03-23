@@ -13,3 +13,12 @@ def get_db_conn_str():
     db_password = os.environ.get("DB_PASSWORD", '')
     connection_str = 'mysql+pymysql://%s:%s@%s/%s' % (db_user, db_password, db_host, db_name)
     return connection_str
+
+
+def get_test_db_conn_str():
+    db_name = 'hiza-test'
+    db_host = os.environ.get("DB_HOST", '')
+    db_user = os.environ.get("DB_USER", '')
+    db_password = os.environ.get("DB_PASSWORD", '')
+    connection_str = 'mysql+pymysql://%s:%s@%s/%s' % (db_user, db_password, db_host, db_name)
+    return connection_str

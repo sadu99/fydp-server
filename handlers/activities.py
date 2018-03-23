@@ -4,12 +4,11 @@ from sets import Set
 
 import datetime
 from flask import request, json
+from operator import itemgetter
 
 from handlers import APIError, _get_user
 from handlers.model.classification_model import model
 from models import db, Activity, File, Jump
-
-from operator import itemgetter
 
 
 def create_activity(user_id):
@@ -132,7 +131,15 @@ def get_activities(user_id):
     if not user:
         raise APIError("invalid user", 400)
 
-    activities = [
+    start_date = request.args.get('start_date')
+    end_date = request.args.get('end_date')
+
+    if not start_date or not end_date:
+        activities = _get_activities_for_user(user)
+    else:
+        activities = _get_activities_for_user_between_dates(user, start_date, end_date)
+
+    response = [
         {
             "activity_id": activity.id,
             "activity_type": activity.activity_type,
@@ -141,11 +148,19 @@ def get_activities(user_id):
             "started_at": activity.started_at,
             "stopped_at": activity.stopped_at,
             "updated_at": activity.updated_at
-        } for activity in _get_activities_for_user(user)
+        } for activity in activities
     ]
 
-    sorted_activities = sorted(activities, key=itemgetter('started_at'), reverse=True)
+    sorted_activities = sorted(response, key=itemgetter('started_at'), reverse=True)
     return json.dumps({"activities": sorted_activities}), 200
+
+
+def get_daily_activity_time(user_id):
+    user = _get_user(user_id)
+    if not user:
+        raise APIError("invalid user", 400)
+
+    return json.dumps({"time": str(_get_daily_activity_time(user))}), 200
 
 
 def get_activity_jumps(user_id, activity_id):
@@ -164,19 +179,6 @@ def get_activity_jumps(user_id, activity_id):
 
         if not response[jump.jump_time].get(jump.leg):
             response[jump.jump_time][jump.leg] = data
-
-    # jumps = [
-    #     {
-    #         "jump_id": jump.id,
-    #         "activity_id": jump.activity_id,
-    #         "jump_time": jump.jump_time,
-    #         "user_id": jump.user_id,
-    #         "severity": jump.severity,
-    #         "abduction_angle": str(jump.abduction_angle),
-    #         "created_at": jump.created_at,
-    #         "updated_at": jump.updated_at
-    #     } for jump in _get_jumps_for_activity(activity)
-    # ]
 
     return json.dumps(response), 200
 
@@ -260,6 +262,19 @@ def _get_activities_for_user(user):
     return activities
 
 
+def _get_activities_for_user_between_dates(user, start_date, end_date):
+    try:
+        activities = db.session.query(Activity).filter(
+            Activity.user_id == user.id,
+            Activity.started_at >= start_date,
+            Activity.started_at <= end_date
+        ).all()
+    except Exception:
+        traceback.print_exc()
+        raise APIError("failed to fetch activities between dates for user", 500)
+    return activities
+
+
 def _get_files_for_activity(activity):
     try:
         files = activity.files
@@ -267,3 +282,20 @@ def _get_files_for_activity(activity):
         traceback.print_exc()
         raise APIError("failed to fetch files for activity", 500)
     return files
+
+
+def _get_daily_activity_time(user):
+    try:
+        start_date = datetime.datetime.utcnow().date()
+        end_date = datetime.datetime.utcnow().date() + datetime.timedelta(days=1)
+
+        result = db.engine.execute("select sum(updated_at - started_at) from activities where started_at >='%s' "
+                                   "and started_at <= '%s' and user_id='%s'" % (start_date, end_date, user.id))
+
+        for row in result:
+            time = row[0]
+
+    except Exception:
+        traceback.print_exc()
+        raise APIError("failed to fetch daily activity time for user", 500)
+    return time
