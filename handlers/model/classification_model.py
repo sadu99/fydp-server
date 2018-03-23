@@ -51,7 +51,7 @@ class ClassificationModel:
     def train_model(self):
         DATA_PATH = os.path.join(config.ROOT_DIR, 'supervised_data')
         classes = ["Jump", "Walk", "Run", "Noise"]
-        sides = ["left", "right"]
+        sides = ["left", "right"] if config.BOTH_LEGS else ["left"]
         config.training_threshold_map = {
             1: {
                 "left": {"Jump": 0.5,  "Walk": 0.35, "Run": 0.5, "Noise": 0.3},
@@ -152,8 +152,7 @@ class ClassificationModel:
 
     def test_classifier(self, file_name):
         home = os.path.expanduser("~")
-        sides = ["left", "right"]
-        # sides = ["left"]
+        sides = ["left", "right"] if config.BOTH_LEGS else ["left"]
 
         for side in sides:
             acc_file = pd.read_csv("%s/data/%s_acc_%s.csv" % (home, file_name, side))
@@ -237,7 +236,7 @@ class ClassificationModel:
         home = os.path.expanduser("~")
         jumps = []
         matched_jumps = []
-        sides = ["left", "right"]
+        sides = ["left", "right"] if config.BOTH_LEGS else ["left"]
         left_predictions = []
         right_predictions = []
 
@@ -271,8 +270,7 @@ class ClassificationModel:
             euler_times = np.array(euler_file['time'])
 
             # Extract Spikes
-            # spikes = left_spikes
-            spikes = left_spikes if side == 'left' else right_spikes
+            spikes = left_spikes if side == 'left' or not config.BOTH_LEGS else right_spikes
             for spike in spikes:
                 max_y_value = max(acc_y_ts.data_axis[spike["start_index"]: spike["end_index"]])
                 min_y_value = min(acc_y_ts.data_axis[spike["start_index"]: spike["end_index"]])
@@ -316,7 +314,7 @@ class ClassificationModel:
                 ])
 
             predictions = self.model.predict(data_test)
-            if side == 'left':
+            if side == 'left' or not config.BOTH_LEGS:
                 left_predictions = predictions
             else:
                 right_predictions = predictions
@@ -344,35 +342,38 @@ class ClassificationModel:
                         jumps.pop()
                     jumps.append(jump)
 
-        jump_matches = [None]*len(jumps)
-        for j, jump in enumerate(jumps):
-            i = 0
-            this_jump_time = jump["jump_time"]
+        # Match the jump times to make sure a jump occurred
+        if config.BOTH_LEGS:
+            jump_matches = [None]*len(jumps)
+            for j, jump in enumerate(jumps):
+                i = 0
+                this_jump_time = jump["jump_time"]
 
-            while i < len(jumps):
-                other_jump_time = jumps[i]["jump_time"]
-                jump_time_diff = abs(this_jump_time - other_jump_time)
+                while i < len(jumps):
+                    other_jump_time = jumps[i]["jump_time"]
+                    jump_time_diff = abs(this_jump_time - other_jump_time)
 
-                # test if jump i potentially be paired with jump j
-                if jump_time_diff < 500 and not jump["leg"] == jumps[i]["leg"] and not jump_time_diff == 0:
-                    is_this_good_match = jump_matches[j] == None or jump_time_diff < abs(jumps[jump_matches[j]]["jump_time"] - this_jump_time)
-                    is_other_good_match = jump_matches[i] == None or jump_time_diff < abs(jumps[jump_matches[i]]["jump_time"] - other_jump_time)
-                    if is_this_good_match and is_other_good_match:
-                        if jump_matches[i]:
-                            jump_matches[jump_matches[i]] = None
-                        jump_matches[i] = j
-                        jump_matches[j] = i
-                i += 1
+                    # test if jump i potentially be paired with jump j
+                    if jump_time_diff < 500 and not jump["leg"] == jumps[i]["leg"] and not jump_time_diff == 0:
+                        is_this_good_match = jump_matches[j] == None or jump_time_diff < abs(jumps[jump_matches[j]]["jump_time"] - this_jump_time)
+                        is_other_good_match = jump_matches[i] == None or jump_time_diff < abs(jumps[jump_matches[i]]["jump_time"] - other_jump_time)
+                        if is_this_good_match and is_other_good_match:
+                            if jump_matches[i]:
+                                jump_matches[jump_matches[i]] = None
+                            jump_matches[i] = j
+                            jump_matches[j] = i
+                    i += 1
 
-        for idx, match in enumerate(jump_matches):
-            if not match == None:
-                matched_jumps.append(jumps[idx])
+            for idx, match in enumerate(jump_matches):
+                if not match == None:
+                    matched_jumps.append(jumps[idx])
 
+        # jumps_for_graphs = matched_jumps if config.BOTH_LEGS else jumps
         # plt.figure(figsize=(14, 7))
         # plt.plot(right_acc_file['time'], right_acc_file['x'], 'b')
         # plt.plot(left_acc_file['time'], left_acc_file['x'], 'c')
         # plt.title('left-right x')
-        # for jump in matched_jumps:
+        # for jump in jumps_for_graphs:
         #     if jump["leg"] == 'left':
         #         plt.plot(jump["jump_time"], 0, 'ro')
         #     else:
@@ -383,17 +384,18 @@ class ClassificationModel:
         #         plt.plot(spike["time"], 1, 'go')
         #     else:
         #         plt.plot(spike["time"], 1, 'ko')
-        # for idx, spike in enumerate(right_spikes):
-        #     if right_predictions[idx] == 0:
-        #         plt.plot(spike["time"], 1, 'yo')
-        #     else:
-        #         plt.plot(spike["time"], 1, 'ko')
+        # if config.BOTH_LEGS:
+        #     for idx, spike in enumerate(right_spikes):
+        #         if right_predictions[idx] == 0:
+        #             plt.plot(spike["time"], 1, 'yo')
+        #         else:
+        #             plt.plot(spike["time"], 1, 'ko')
         #
         # plt.figure(figsize=(14, 7))
         # plt.plot(right_euler_file['time'], right_euler_file['yaw'], 'b')
         # plt.plot(left_euler_file['time'], left_euler_file['yaw'], 'c')
         # plt.title("yaw, left=cyan, right=blue")
-        # for jump in matched_jumps:
+        # for jump in jumps_for_graphs:
         #     if jump["leg"] == 'left':
         #         plt.plot(jump["jump_time"], 310, 'co')
         #     else:
@@ -401,7 +403,6 @@ class ClassificationModel:
         #
         # plt.show()
 
-        return matched_jumps
-        # return jumps
+        return matched_jumps if config.BOTH_LEGS else jumps
 
 model = ClassificationModel()

@@ -3,7 +3,7 @@ import os
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 TEST_THRESHOLD = 0.3
 ANGLE_CONSTANT = 0.4
-
+BOTH_LEGS = False
 
 def get_db_conn_str():
     db_name = os.environ.get("DB_NAME", '')
