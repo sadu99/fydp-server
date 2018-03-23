@@ -28,14 +28,6 @@ def get_historical_jumps(user_id):
         if not response[jump_date].get(jump[1]):
             response[jump_date][jump[1]] = data
 
-    # jumps = [
-    #     {"date": jump[0],
-    #      "count": int(jump[1]/2),
-    #      "severity": jump[2],
-    #      "abduction_angle": jump[3],
-    #      "rpe": jump[4]
-    #      } for jump in _get_jumps_for_user_with_id(user_id, start_date, end_date)]
-
     return json.dumps(response), 200
 
 
@@ -56,8 +48,6 @@ def _get_jumps_for_user_with_id(user_id, start_date, end_date):
             Jump.jump_date,
             Jump.leg,
         ).all()
-
-        print jumps
     except Exception:
         traceback.print_exc()
         raise APIError("failed to fetch jumps for user", 500)

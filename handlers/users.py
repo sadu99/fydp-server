@@ -3,7 +3,7 @@ import uuid
 
 from flask import request, json
 
-from handlers import APIError
+from handlers import APIError, _create_user
 from models import db, User
 
 
@@ -28,12 +28,3 @@ def create_user():
 
     _create_user(user)
     return json.dumps({"user_id": user.id}), 201
-
-
-def _create_user(user):
-    try:
-        db.session.add(user)
-        db.session.commit()
-    except Exception:
-        traceback.print_exc()
-        raise APIError("failed to create new user", 500)
