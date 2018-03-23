@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 
 class ClassificationModel:
     def __init__(self):
-        self.model = KNeighborsClassifier(weights='distance')
+        self.model = KNeighborsClassifier(weights='distance', n_neighbors=7)
 
     def mod_euler_angles(self, pitch, roll, yaw):
         pitch_offset = pitch[0]
@@ -337,8 +337,8 @@ class ClassificationModel:
                         "jump_end_index": euler_end_idx,
                         "leg": side,
                     }
-                    # To prevent picking up loading, set min jump interval to 1000ms
-                    if len(jumps) > 1 and jumps[-1]["leg"] == side and jump["jump_time"] - jumps[-1]["jump_time"] < 1000:
+                    # To prevent picking up loading, set min jump interval
+                    if len(jumps) > 1 and jumps[-1]["leg"] == side and jump["jump_time"] - jumps[-1]["jump_time"] < config.JUMP_COOLDOWN:
                         jumps.pop()
                     jumps.append(jump)
 
@@ -400,7 +400,6 @@ class ClassificationModel:
         #         plt.plot(jump["jump_time"], 310, 'co')
         #     else:
         #         plt.plot(jump["jump_time"], 310, 'bo')
-        #
         # plt.show()
 
         return matched_jumps if config.BOTH_LEGS else jumps
