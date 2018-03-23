@@ -8,10 +8,10 @@ class TimeSeries:
         self.data_axis = data_axis
         self.max_time = max(time_axis) / 1000
         self.data_points_per_second = int(len(self.time_axis) / self.max_time)
-        self.spike_max_radius = 2 * self.data_points_per_second / 5
+        self.spike_max_radius = self.data_points_per_second / 3
 
     def get_spike(self, index, last_spike_end):
-        step_size = 3 * self.data_points_per_second / 10 # number of points used to calculate variance
+        step_size = self.data_points_per_second / 4 # number of points used to calculate variance
         variance_threshold = 0.001 # threshold used to determine if the motion is at rest
         left_variance = right_variance = 9999
         data_arr = np.array(self.data_axis)

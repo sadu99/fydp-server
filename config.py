@@ -1,9 +1,9 @@
 import os
 
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
-TEST_THRESHOLD = 0.3
+TEST_THRESHOLD = 0.25
 ANGLE_CONSTANT = 0.4
-JUMP_COOLDOWN = 1200
+JUMP_COOLDOWN = 1000
 BOTH_LEGS = True
 
 def get_db_conn_str():

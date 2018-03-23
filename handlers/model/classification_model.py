@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 
 class ClassificationModel:
     def __init__(self):
-        self.model = KNeighborsClassifier(weights='distance', n_neighbors=7)
+        self.model = KNeighborsClassifier(weights='distance')
 
     def mod_euler_angles(self, pitch, roll, yaw):
         pitch_offset = pitch[0]
@@ -126,19 +126,19 @@ class ClassificationModel:
                         data.append([
                             spike["max_value"],
                             spike["min_value"],
-                            # spike["max_value"] - spike["min_value"],
+                            spike["max_value"] - spike["min_value"],
                             # max_y_value,
                             # min_y_value,
-                            # max_y_value - min_y_value,
+                            max_y_value - min_y_value,
                             max_z_value,
                             # min_z_value,
                             # max_z_value - min_z_value,
                             spike["variance"],
-                            # min_pitch,
+                            # max_pitch,
                             # min_roll,
                             # min_yaw,
                             max_pitch - min_pitch,
-                            max_roll,
+                            # yaw_var,
                             # max_yaw,
                             # pitch_var,
                             # roll_var
@@ -147,8 +147,10 @@ class ClassificationModel:
 
         # Create and fit a nearest-neighbor classifier
         self.model.fit(np.asarray(data), np.asarray(targets))
-        # self.test_classifier('1521763913014')
-        # self.process_file('1521763913014')
+        # self.test_classifier('3')
+        # self.process_file('3')
+        self.test_classifier('1521484694744')
+        self.process_file('1521484694744')
 
     def test_classifier(self, file_name):
         home = os.path.expanduser("~")
@@ -196,19 +198,19 @@ class ClassificationModel:
                 data_test.append([
                     spike["max_value"],
                     spike["min_value"],
-                    # spike["max_value"] - spike["min_value"],
+                    spike["max_value"] - spike["min_value"],
                     # max_y_value,
                     # min_y_value,
-                    # max_y_value - min_y_value,
+                    max_y_value - min_y_value,
                     max_z_value,
                     # min_z_value,
                     # max_z_value - min_z_value,
                     spike["variance"],
-                    # min_pitch,
+                    # max_pitch,
                     # min_roll,
                     # min_yaw,
                     max_pitch - min_pitch,
-                    max_roll,
+                    # yaw_var,
                     # max_yaw,
                     # pitch_var,
                     # roll_var
@@ -295,20 +297,19 @@ class ClassificationModel:
                 data_test.append([
                     spike["max_value"],
                     spike["min_value"],
-                    # spike["max_value"] - spike["min_value"],
+                    spike["max_value"] - spike["min_value"],
                     # max_y_value,
                     # min_y_value,
-                    # max_y_value - min_y_value,
+                    max_y_value - min_y_value,
                     max_z_value,
                     # min_z_value,
                     # max_z_value - min_z_value,
                     spike["variance"],
-                    # min_pitch,
+                    # max_pitch,
                     # min_roll,
                     # min_yaw,
                     max_pitch - min_pitch,
-                    max_roll,
-                    # max_yaw,
+                    # yaw_var,
                     # pitch_var,
                     # roll_var
                 ])
@@ -368,29 +369,29 @@ class ClassificationModel:
                 if not match == None:
                     matched_jumps.append(jumps[idx])
 
-        # jumps_for_graphs = matched_jumps if config.BOTH_LEGS else jumps
-        # plt.figure(figsize=(14, 7))
-        # plt.plot(right_acc_file['time'], right_acc_file['x'], 'b')
-        # plt.plot(left_acc_file['time'], left_acc_file['x'], 'c')
-        # plt.title('left-right x')
-        # for jump in jumps_for_graphs:
-        #     if jump["leg"] == 'left':
-        #         plt.plot(jump["jump_time"], 0, 'ro')
-        #     else:
-        #         plt.plot(jump["jump_time"], 0, 'mo')
-        #     print "%s: %s" % (jump["leg"], jump["abduction_angle"])
-        # for idx, spike in enumerate(left_spikes):
-        #     if left_predictions[idx] == 0:
-        #         plt.plot(spike["time"], 1, 'go')
-        #     else:
-        #         plt.plot(spike["time"], 1, 'ko')
-        # if config.BOTH_LEGS:
-        #     for idx, spike in enumerate(right_spikes):
-        #         if right_predictions[idx] == 0:
-        #             plt.plot(spike["time"], 1, 'yo')
-        #         else:
-        #             plt.plot(spike["time"], 1, 'ko')
-        #
+        jumps_for_graphs = matched_jumps if config.BOTH_LEGS else jumps
+        plt.figure(figsize=(14, 7))
+        plt.plot(right_acc_file['time'], right_acc_file['x'], 'b')
+        plt.plot(left_acc_file['time'], left_acc_file['x'], 'c')
+        plt.title('left=green, right=yellow')
+        for jump in jumps_for_graphs:
+            if jump["leg"] == 'left':
+                plt.plot(jump["jump_time"], 0, 'ro')
+            else:
+                plt.plot(jump["jump_time"], 0, 'mo')
+            print "%s: %s" % (jump["leg"], jump["abduction_angle"])
+        for idx, spike in enumerate(left_spikes):
+            if left_predictions[idx] == 0:
+                plt.plot(spike["time"], 1, 'go')
+            else:
+                plt.plot(spike["time"], 1, 'ko')
+        if config.BOTH_LEGS:
+            for idx, spike in enumerate(right_spikes):
+                if right_predictions[idx] == 0:
+                    plt.plot(spike["time"], 1, 'yo')
+                else:
+                    plt.plot(spike["time"], 1, 'ko')
+
         # plt.figure(figsize=(14, 7))
         # plt.plot(right_euler_file['time'], right_euler_file['yaw'], 'b')
         # plt.plot(left_euler_file['time'], left_euler_file['yaw'], 'c')
@@ -400,7 +401,7 @@ class ClassificationModel:
         #         plt.plot(jump["jump_time"], 310, 'co')
         #     else:
         #         plt.plot(jump["jump_time"], 310, 'bo')
-        # plt.show()
+        plt.show()
 
         return matched_jumps if config.BOTH_LEGS else jumps
 
