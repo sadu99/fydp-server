@@ -160,7 +160,7 @@ def get_daily_activity_time(user_id):
     if not user:
         raise APIError("invalid user", 400)
 
-    return json.dumps(str(_get_daily_activity_time(user))), 200
+    return json.dumps({"time": str(_get_daily_activity_time(user))}), 200
 
 
 def get_activity_jumps(user_id, activity_id):
