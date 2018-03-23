@@ -147,8 +147,8 @@ class ClassificationModel:
 
         # Create and fit a nearest-neighbor classifier
         self.model.fit(np.asarray(data), np.asarray(targets))
-        # self.test_classifier('5')
-        # self.process_file('5')
+        # self.test_classifier('1521763913014')
+        # self.process_file('1521763913014')
 
     def test_classifier(self, file_name):
         home = os.path.expanduser("~")
@@ -339,6 +339,9 @@ class ClassificationModel:
                         "jump_end_index": euler_end_idx,
                         "leg": side,
                     }
+                    # To prevent picking up loading, set min jump interval to 1000ms
+                    if len(jumps) > 1 and jumps[-1]["leg"] == side and jump["jump_time"] - jumps[-1]["jump_time"] < 1000:
+                        jumps.pop()
                     jumps.append(jump)
 
         jump_matches = [None]*len(jumps)
