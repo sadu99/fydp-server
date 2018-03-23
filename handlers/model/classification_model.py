@@ -40,13 +40,8 @@ class ClassificationModel:
                     yaw[i] = yaw[i] - 360
 
     def get_severity(self, angle):
-        if angle <= 6.0:
-            return 0.25
-        if angle <= 10.0:
-            return 0.50
-        if angle <= 14.0:
-            return 0.75
-        return 1.0
+        severity = abs(angle / 14.0)
+        return severity if severity < 1.0 else 1.0
 
     def train_model(self):
         DATA_PATH = os.path.join(config.ROOT_DIR, 'supervised_data')
@@ -149,8 +144,6 @@ class ClassificationModel:
         self.model.fit(np.asarray(data), np.asarray(targets))
         # self.test_classifier('3')
         # self.process_file('3')
-        self.test_classifier('1521484694744')
-        self.process_file('1521484694744')
 
     def test_classifier(self, file_name):
         home = os.path.expanduser("~")
@@ -369,29 +362,28 @@ class ClassificationModel:
                 if not match == None:
                     matched_jumps.append(jumps[idx])
 
-        jumps_for_graphs = matched_jumps if config.BOTH_LEGS else jumps
-        plt.figure(figsize=(14, 7))
-        plt.plot(right_acc_file['time'], right_acc_file['x'], 'b')
-        plt.plot(left_acc_file['time'], left_acc_file['x'], 'c')
-        plt.title('left=green, right=yellow')
-        for jump in jumps_for_graphs:
-            if jump["leg"] == 'left':
-                plt.plot(jump["jump_time"], 0, 'ro')
-            else:
-                plt.plot(jump["jump_time"], 0, 'mo')
-            print "%s: %s" % (jump["leg"], jump["abduction_angle"])
-        for idx, spike in enumerate(left_spikes):
-            if left_predictions[idx] == 0:
-                plt.plot(spike["time"], 1, 'go')
-            else:
-                plt.plot(spike["time"], 1, 'ko')
-        if config.BOTH_LEGS:
-            for idx, spike in enumerate(right_spikes):
-                if right_predictions[idx] == 0:
-                    plt.plot(spike["time"], 1, 'yo')
-                else:
-                    plt.plot(spike["time"], 1, 'ko')
-
+        # jumps_for_graphs = matched_jumps if config.BOTH_LEGS else jumps
+        # plt.figure(figsize=(14, 7))
+        # plt.plot(right_acc_file['time'], right_acc_file['x'], 'b')
+        # plt.plot(left_acc_file['time'], left_acc_file['x'], 'c')
+        # plt.title('left=green, right=yellow')
+        # for jump in jumps_for_graphs:
+        #     if jump["leg"] == 'left':
+        #         plt.plot(jump["jump_time"], 0, 'ro')
+        #     else:
+        #         plt.plot(jump["jump_time"], 0, 'mo')
+        #     print "%s: %s" % (jump["leg"], jump["abduction_angle"])
+        # for idx, spike in enumerate(left_spikes):
+        #     if left_predictions[idx] == 0:
+        #         plt.plot(spike["time"], 1, 'go')
+        #     else:
+        #         plt.plot(spike["time"], 1, 'ko')
+        # if config.BOTH_LEGS:
+        #     for idx, spike in enumerate(right_spikes):
+        #         if right_predictions[idx] == 0:
+        #             plt.plot(spike["time"], 1, 'yo')
+        #         else:
+        #             plt.plot(spike["time"], 1, 'ko')
         # plt.figure(figsize=(14, 7))
         # plt.plot(right_euler_file['time'], right_euler_file['yaw'], 'b')
         # plt.plot(left_euler_file['time'], left_euler_file['yaw'], 'c')
@@ -401,7 +393,7 @@ class ClassificationModel:
         #         plt.plot(jump["jump_time"], 310, 'co')
         #     else:
         #         plt.plot(jump["jump_time"], 310, 'bo')
-        plt.show()
+        # plt.show()
 
         return matched_jumps if config.BOTH_LEGS else jumps
 
